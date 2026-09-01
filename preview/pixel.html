@@ -1,0 +1,1621 @@
+<title>Ratio on a Pixel 6 Pro</title>
+
+<!--
+  Required for the phone layout to engage when this page is served directly.
+
+  Without it a mobile browser lays the page out at about 980px and zooms out to fit, so the
+  narrow-width media query never matches and the whole thing arrives as a shrunken desktop
+  view — which also makes the phone mock the wrong size, defeating the point of it. Hosted
+  artifacts get this tag from their own wrapper; a file served from disk does not.
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap">
+
+<style>
+  /* ------------------------------------------------------------------ tokens
+     Two palettes. The workbench follows the viewer's theme; the phone screen
+     never does — it is the app, and the app is dark. Those tokens are copied
+     from src/theme/colors.ts and must not drift. */
+  :root {
+    --ground: #F4F3F7;
+    --panel: #FFFFFF;
+    --ink: #1B1A22;
+    --muted: #6C6A7A;
+    --faint: #9694A4;
+    --line: #E4E2EB;
+    --accent: #6A45FF;
+    --accent-wash: rgba(106, 69, 255, 0.09);
+    --shadow: 0 24px 60px -20px rgba(27, 26, 34, 0.34);
+
+    /* Ratio's own tokens. Fixed in both themes. */
+    --app-bg: #0B0B10;
+    --app-surface: #15151D;
+    --app-text: #F2F2F7;
+    --app-muted: #9A9AAB;
+    --app-faint: #6B6B7B;
+    --app-accent: #7C5CFF;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131218;
+      --panel: #1C1A24;
+      --ink: #ECEBF2;
+      --muted: #9B98A8;
+      --faint: #74717F;
+      --line: #2B2934;
+      --accent: #9B82FF;
+      --accent-wash: rgba(155, 130, 255, 0.14);
+      --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131218;
+    --panel: #1C1A24;
+    --ink: #ECEBF2;
+    --muted: #9B98A8;
+    --faint: #74717F;
+    --line: #2B2934;
+    --accent: #9B82FF;
+    --accent-wash: rgba(155, 130, 255, 0.14);
+    --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+
+  /* ------------------------------------------------------------------- page */
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* On a phone the mock is the point.
+     It takes the full width at true scale, sits at the very top with nothing above it, and
+     everything else — the description, the dials, the readout — is below the fold. Page
+     padding goes to zero so the 412dp screen is not squeezed into 412 minus margins. */
+  @media (max-width: 880px) {
+    .shell {
+      display: flex;
+      flex-direction: column;
+      grid-template-columns: none;
+      padding: 0 0 48px;
+      gap: 22px;
+    }
+
+    /* Lets the phone, readout and caption order themselves against the rest of the page. */
+    .viewer { display: contents; }
+
+    .phone-scaler { order: 1; align-self: center; }
+    header.masthead { order: 2; padding: 0 14px 16px; margin: 0 14px; }
+    .rail { order: 3; padding: 0 14px; }
+    .readout { order: 4; align-self: center; width: calc(100% - 28px); }
+    .caption { order: 5; padding: 0 14px; }
+
+    /* Square off the top corners: at full bleed a rounded card reads as a floating widget,
+       and the point is to look at a screen. */
+    .phone { border-radius: 0; box-shadow: none; }
+  }
+
+  header.masthead {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .device-tag {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    background: var(--accent-wash);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .masthead p {
+    margin: 0;
+    flex: 1 1 320px;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ------------------------------------------------------------------ rail */
+  .rail { display: flex; flex-direction: column; gap: 18px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card h2 {
+    margin: 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  button {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+
+  button:hover { background: var(--accent-wash); border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+
+  .field { display: grid; gap: 5px; }
+
+  .field-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .field-head b { font-weight: 500; }
+
+  .field-head span {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 0;
+    /* Vertical drags scroll the page and leave the value alone; only a sideways drag moves
+       it. Without this, scrolling past a slider on a phone silently changes its value. */
+    touch-action: pan-y;
+  }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .hint {
+    margin: 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: var(--faint);
+  }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .check input { accent-color: var(--accent); margin: 0; }
+
+  /* ----------------------------------------------------------------- stage */
+  .viewer { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  /* 412x892dp is the Pixel 6 Pro's logical screen: 1440x3120 at 3.5x. Scaled
+     to fit the browser, never resized — the dp grid inside must stay exact. */
+  .phone-scaler { transform-origin: top center; }
+
+  .phone {
+    width: 412px;
+    height: 892px;
+    background: var(--app-bg);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: Roboto, system-ui, sans-serif;
+    color: var(--app-text);
+  }
+
+  /* No violet wash here. The player paints one behind the artwork for depth, but skips it
+     under the visualiser — a night sky wants a flat black ground. */
+
+  .inset-top { height: 48px; flex: none; }
+
+  .topbar {
+    flex: none;
+    height: 50px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar .album {
+    font-size: 13px;
+    color: var(--app-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .glyph { width: 26px; height: 26px; flex: none; color: var(--app-text); }
+  .glyph.dim { color: var(--app-muted); }
+  .glyph.on { color: var(--app-accent); }
+
+  .stage { flex: 1 1 auto; position: relative; min-height: 0; width: 100%; }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Drawn on request: shows where the letterboxed fire ends and the band the
+     starfield exists to fill begins. */
+  .band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    border-bottom: 1px dashed rgba(124, 92, 255, 0.75);
+    pointer-events: none;
+    display: none;
+  }
+
+  .band span {
+    position: absolute;
+    right: 8px;
+    bottom: 4px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+    color: rgba(190, 175, 255, 0.95);
+  }
+
+  .showband .band { display: block; }
+
+  .tune {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 17px;
+    background: var(--app-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--app-muted);
+  }
+
+  .bottom { flex: none; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+  .inset-bottom { height: 40px; flex: none; }
+
+  .details { display: flex; align-items: center; gap: 12px; }
+  .details .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .details .title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .details .artist { font-size: 13px; color: var(--app-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .seek { display: flex; flex-direction: column; gap: 4px; }
+  .seek .hit { height: 28px; display: flex; align-items: center; }
+  .seek .track { height: 4px; width: 100%; border-radius: 2px; background: #2A2A36; position: relative; }
+  .seek .fill { position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 2px; background: var(--app-accent); }
+  .seek .thumb { position: absolute; left: 38%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 7px; background: var(--app-text); }
+  .seek .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--app-faint); font-variant-numeric: tabular-nums; }
+
+  .transport { height: 66px; display: flex; align-items: center; justify-content: space-between; }
+  .transport .play { width: 66px; height: 66px; border-radius: 33px; background: var(--app-accent); display: flex; align-items: center; justify-content: center; }
+
+  /* --------------------------------------------------------------- readout */
+  .readout {
+    width: 100%;
+    max-width: 640px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    overflow-x: auto;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+
+  th { font-weight: 500; color: var(--muted); }
+
+  td {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  td.note { text-align: left; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; white-space: normal; }
+
+  .caption { max-width: 640px; color: var(--muted); font-size: 12.5px; margin: 0; }
+  .caption code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px; color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none; }
+  }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <h1>Ratio on a Pixel 6 Pro</h1>
+    <span class="device-tag">412 × 892 dp · 1440 × 3120 @ 3.5×</span>
+    <p>
+      Opacities are exactly as they are on your phone. Pin a colour to hold it against the
+      device, then raise vividness: it adds light without touching hue or saturation, which
+      is the part of raising screen brightness the drawing can actually reproduce.
+    </p>
+  </header>
+
+  <div class="rail">
+    <section class="card">
+      <h2>Vividness</h2>
+      <div class="field">
+        <div class="field-head"><b>Toward full value</b><span id="vividOut">0.00</span></div>
+        <input type="range" id="vivid" min="0" max="100" step="1" value="0" aria-label="Vividness">
+      </div>
+      <p class="hint" id="vividHint"></p>
+      <p class="hint">
+        Scales each colour until its brightest channel reaches 255. Hue and saturation are
+        untouched &mdash; only light is added. 0.00 is the build on your phone.
+      </p>
+    </section>
+    <section class="card">
+      <h2>Colour</h2>
+      <div class="field">
+        <div class="field-head"><b>Ramp position</b><span id="colourOut">0.50</span></div>
+        <input type="range" id="colour" min="0" max="100" step="1" value="50" aria-label="Colour ramp position">
+      </div>
+      <div class="buttons">
+        <button id="sweep" aria-pressed="false">Pinned</button>
+      </div>
+      <p class="hint" id="colourHint"></p>
+      <p class="hint">
+        Held still by default so it can be compared against the phone. Loudness keeps
+        beating underneath, so the fire still moves. Press Pinned to let it drift.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="viewer">
+    <div class="phone-scaler" id="scaler">
+      <div class="phone" id="phone">
+        <div class="inset-top"></div>
+
+        <div class="topbar">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="album">Nocturnes, Op. 9</div>
+          <svg class="glyph on" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c1 3-1 4-1 6 0 1 1 2 2 2s2-1 2-3c2 2 3 4 3 7a6 6 0 0 1-12 0c0-4 3-7 6-12z"/></svg>
+          <svg class="glyph dim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </div>
+
+        <div class="stage" id="stage">
+          <svg id="sky" aria-hidden="true"></svg>
+          <svg id="fire" aria-hidden="true"></svg>
+          <div class="band" id="bandMark"><span id="bandLabel"></span></div>
+          <div class="tune">
+            <svg class="glyph" style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+          </div>
+        </div>
+
+        <div class="bottom">
+          <div class="details">
+            <div class="text">
+              <div class="title">Nocturne in E-flat</div>
+              <div class="artist">Frédéric Chopin</div>
+            </div>
+            <svg class="glyph dim" style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 12c0 4.5-7 9-7 9z"/></svg>
+            <svg class="glyph dim" style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+
+          <div class="seek">
+            <div class="hit"><div class="track"><div class="fill"></div><div class="thumb"></div></div></div>
+            <div class="times"><span>2:14</span><span>5:51</span></div>
+          </div>
+
+          <div class="transport">
+            <svg class="glyph dim" style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <svg class="glyph" style="width:30px;height:30px" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+            <div class="play"><svg style="width:30px;height:30px;color:#fff" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg></div>
+            <svg class="glyph" style="width:30px;height:30px" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z"/></svg>
+            <svg class="glyph dim" style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+        </div>
+
+        <div class="inset-bottom"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Compiled from src/visualiser/*.ts by preview/build.js — the shipping code, not a copy.
+var __m = {};
+function __req(id){ return __m[id.replace('./','')]; }
+__m['noise'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.wobble = wobble;
+exports.wobble01 = wobble01;
+const OCTAVES = 3;
+const LACUNARITY = 1.87;
+const GAIN = 0.5;
+function phaseFor(seed) {
+    return ((Math.sin(seed * 127.1 + 311.7) * 43758.5453) % 1) * Math.PI * 2;
+}
+function wobble(seed, t) {
+    let value = 0;
+    let amplitude = 1;
+    let frequency = 1;
+    let total = 0;
+    for (let octave = 0; octave < OCTAVES; octave += 1) {
+        value += Math.sin(t * frequency + phaseFor(seed + octave * 17.3)) * amplitude;
+        total += amplitude;
+        frequency *= LACUNARITY;
+        amplitude *= GAIN;
+    }
+    return total > 0 ? value / total : 0;
+}
+function wobble01(seed, t) {
+    return (wobble(seed, t) + 1) / 2;
+}
+
+return exports; })();
+__m['fft'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.largestPowerOfTwo = largestPowerOfTwo;
+exports.hannWindow = hannWindow;
+exports.fftInPlace = fftInPlace;
+exports.magnitudeSpectrum = magnitudeSpectrum;
+function largestPowerOfTwo(length) {
+    if (length < 2)
+        return 0;
+    return 2 ** Math.floor(Math.log2(length));
+}
+const windowCache = new Map();
+function hannWindow(size) {
+    const cached = windowCache.get(size);
+    if (cached)
+        return cached;
+    const window = new Float64Array(size);
+    for (let i = 0; i < size; i += 1) {
+        window[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (size - 1)));
+    }
+    windowCache.set(size, window);
+    return window;
+}
+function fftInPlace(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i += 1) {
+        let bit = n >> 1;
+        for (; j & bit; bit >>= 1)
+            j ^= bit;
+        j ^= bit;
+        if (i < j) {
+            const tr = re[i];
+            re[i] = re[j];
+            re[j] = tr;
+            const ti = im[i];
+            im[i] = im[j];
+            im[j] = ti;
+        }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+        const angle = (-2 * Math.PI) / len;
+        const wr = Math.cos(angle);
+        const wi = Math.sin(angle);
+        const half = len >> 1;
+        for (let start = 0; start < n; start += len) {
+            let cr = 1;
+            let ci = 0;
+            for (let k = 0; k < half; k += 1) {
+                const a = start + k;
+                const b = a + half;
+                const vr = re[b] * cr - im[b] * ci;
+                const vi = re[b] * ci + im[b] * cr;
+                re[b] = re[a] - vr;
+                im[b] = im[a] - vi;
+                re[a] += vr;
+                im[a] += vi;
+                const nextCr = cr * wr - ci * wi;
+                ci = cr * wi + ci * wr;
+                cr = nextCr;
+            }
+        }
+    }
+}
+function magnitudeSpectrum(samples, size) {
+    const re = new Float64Array(size);
+    const im = new Float64Array(size);
+    const window = hannWindow(size);
+    for (let i = 0; i < size; i += 1) {
+        re[i] = (samples[i] ?? 0) * window[i];
+    }
+    fftInPlace(re, im);
+    const bins = (size >> 1) + 1;
+    const magnitudes = new Float64Array(bins);
+    for (let i = 0; i < bins; i += 1) {
+        magnitudes[i] = Math.hypot(re[i], im[i]);
+    }
+    return magnitudes;
+}
+
+return exports; })();
+__m['flameColour'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.flameColour = flameColour;
+exports.flameColourString = flameColourString;
+const STOPS = [
+    { at: 0 / 6, colour: { r: 148, g: 0, b: 211 } },
+    { at: 1 / 6, colour: { r: 75, g: 0, b: 130 } },
+    { at: 2 / 6, colour: { r: 0, g: 71, b: 255 } },
+    { at: 3 / 6, colour: { r: 0, g: 200, b: 83 } },
+    { at: 4 / 6, colour: { r: 255, g: 235, b: 59 } },
+    { at: 5 / 6, colour: { r: 255, g: 138, b: 0 } },
+    { at: 6 / 6, colour: { r: 230, g: 32, b: 32 } },
+];
+function flameColour(brightness) {
+    const t = clamp01(brightness);
+    for (let i = 1; i < STOPS.length; i += 1) {
+        const upper = STOPS[i];
+        if (t > upper.at)
+            continue;
+        const lower = STOPS[i - 1];
+        const span = upper.at - lower.at;
+        return mix(lower.colour, upper.colour, span > 0 ? (t - lower.at) / span : 0);
+    }
+    return { ...STOPS[STOPS.length - 1].colour };
+}
+function flameColourString(brightness, alpha = 1) {
+    const { r, g, b } = flameColour(brightness);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function mix(from, to, t) {
+    return {
+        r: Math.round(from.r + (to.r - from.r) * t),
+        g: Math.round(from.g + (to.g - from.g) * t),
+        b: Math.round(from.b + (to.b - from.b) * t),
+    };
+}
+function clamp01(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.min(1, Math.max(0, value));
+}
+
+return exports; })();
+__m['features'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BRIGHT_HZ = exports.DARK_HZ = exports.LOUD_DB = exports.QUIET_DB = exports.SILENCE = void 0;
+exports.rms = rms;
+exports.loudness = loudness;
+exports.spectralCentroid = spectralCentroid;
+exports.brightness = brightness;
+exports.analyse = analyse;
+exports.clamp01 = clamp01;
+const fft_1 = require("./fft");
+exports.SILENCE = { amplitude: 0, brightness: 0 };
+function rms(frames) {
+    const length = frames.length;
+    if (length === 0)
+        return 0;
+    let sum = 0;
+    for (let i = 0; i < length; i += 1)
+        sum += frames[i] * frames[i];
+    return Math.sqrt(sum / length);
+}
+exports.QUIET_DB = -50;
+exports.LOUD_DB = -8;
+function loudness(frames) {
+    const energy = rms(frames);
+    if (energy <= 0)
+        return 0;
+    const db = 20 * Math.log10(energy);
+    return clamp01((db - exports.QUIET_DB) / (exports.LOUD_DB - exports.QUIET_DB));
+}
+function spectralCentroid(frames, sampleRate) {
+    const size = (0, fft_1.largestPowerOfTwo)(frames.length);
+    if (size < 4)
+        return 0;
+    const magnitudes = (0, fft_1.magnitudeSpectrum)(frames, size);
+    let weighted = 0;
+    let total = 0;
+    for (let bin = 1; bin < magnitudes.length; bin += 1) {
+        const magnitude = magnitudes[bin];
+        weighted += ((bin * sampleRate) / size) * magnitude;
+        total += magnitude;
+    }
+    return total > 0 ? weighted / total : 0;
+}
+exports.DARK_HZ = 120;
+exports.BRIGHT_HZ = 6000;
+function brightness(frames, sampleRate) {
+    const centroid = spectralCentroid(frames, sampleRate);
+    if (centroid <= 0)
+        return 0;
+    const span = Math.log2(exports.BRIGHT_HZ) - Math.log2(exports.DARK_HZ);
+    return clamp01((Math.log2(centroid) - Math.log2(exports.DARK_HZ)) / span);
+}
+function analyse(frames, sampleRate) {
+    return {
+        amplitude: loudness(frames),
+        brightness: brightness(frames, sampleRate),
+    };
+}
+function clamp01(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.min(1, Math.max(0, value));
+}
+
+return exports; })();
+__m['envelope'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.COLOUR_RATES = exports.FLAME_RATES = void 0;
+exports.follow = follow;
+exports.FLAME_RATES = { attack: 0.6, release: 0.08 };
+exports.COLOUR_RATES = { attack: 0.2, release: 0.08 };
+function follow(previous, target, rates) {
+    if (!Number.isFinite(target))
+        return previous;
+    const rate = target > previous ? rates.attack : rates.release;
+    return previous + (target - previous) * rate;
+}
+
+return exports; })();
+__m['flameShape'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.flameWidthProfile = flameWidthProfile;
+exports.flameOutline = flameOutline;
+exports.toPathData = toPathData;
+const noise_1 = require("./noise");
+const FOOT = 0.15;
+const FLARE = 0.55;
+const FOOT_DECAY = 6;
+const peakCache = new Map();
+function bodyPeak(tipSharpness) {
+    const cached = peakCache.get(tipSharpness);
+    if (cached)
+        return cached;
+    const at = FLARE / (FLARE + tipSharpness);
+    const value = at ** FLARE * (1 - at) ** tipSharpness;
+    const result = { at, value: value > 0 ? value : 1 };
+    peakCache.set(tipSharpness, result);
+    return result;
+}
+function flameWidthProfile(u, tipSharpness) {
+    if (!Number.isFinite(u) || u < 0 || u > 1)
+        return 0;
+    const peak = bodyPeak(tipSharpness);
+    const body = (u ** FLARE * (1 - u) ** tipSharpness) / peak.value;
+    const foot = FOOT * (1 - u) ** FOOT_DECAY;
+    return body + foot * (1 - body);
+}
+function flameOutline(params) {
+    const { seed, time, centreX, baseY, height, width, sway, flutter, tipSharpness, segments, } = params;
+    const steps = Math.max(3, Math.floor(segments));
+    const left = [];
+    const right = [];
+    for (let i = 0; i <= steps; i += 1) {
+        const u = i / steps;
+        const bend = u ** 1.45;
+        const lean = (0, noise_1.wobble)(seed + 5.7, time * 0.42) * sway * 0.75 * bend;
+        const whip = (0, noise_1.wobble)(seed, time * 1.35 + u * 2.4) * sway * 0.55 * bend;
+        const ripple = (0, noise_1.wobble)(seed + 88.2, time * 2.3 + u * 5.1) * flutter * bend;
+        const x = centreX + lean + whip + ripple;
+        const y = baseY - height * u;
+        const breathe = 0.78 + 0.3 * (0, noise_1.wobble01)(seed + 141.7, time * 1.9 + u * 3.6);
+        const halfWidth = Math.max(0, (width / 2) * flameWidthProfile(u, tipSharpness) * breathe);
+        left.push({ x: x - halfWidth, y });
+        right.push({ x: x + halfWidth, y });
+    }
+    return [...left, ...right.reverse().slice(1)];
+}
+function toPathData(points) {
+    const count = points.length;
+    if (count < 3)
+        return '';
+    const at = (index) => points[((index % count) + count) % count];
+    let path = `M ${round(points[0].x)} ${round(points[0].y)}`;
+    for (let i = 0; i < count; i += 1) {
+        const previous = at(i - 1);
+        const current = at(i);
+        const next = at(i + 1);
+        const following = at(i + 2);
+        const c1 = {
+            x: current.x + (next.x - previous.x) / 6,
+            y: current.y + (next.y - previous.y) / 6,
+        };
+        const c2 = {
+            x: next.x - (following.x - current.x) / 6,
+            y: next.y - (following.y - current.y) / 6,
+        };
+        path += ` C ${round(c1.x)} ${round(c1.y)}, ${round(c2.x)} ${round(c2.y)}, ${round(next.x)} ${round(next.y)}`;
+    }
+    return `${path} Z`;
+}
+function round(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.round(value * 100) / 100;
+}
+
+return exports; })();
+__m['flameDrive'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MAX_REACH = void 0;
+exports.tongueEnergy = tongueEnergy;
+exports.makeTongues = makeTongues;
+exports.tongueSpread = tongueSpread;
+const noise_1 = require("./noise");
+const IDLE = 0.26;
+exports.MAX_REACH = 1.35;
+const KNEE = 0.85;
+function softLimit(value) {
+    if (value <= KNEE)
+        return value;
+    const room = exports.MAX_REACH - KNEE;
+    return KNEE + room * (1 - Math.exp(-(value - KNEE) / room));
+}
+function tongueEnergy(spec, time, level) {
+    const surge = (0, noise_1.wobble01)(spec.seed + 61.3, time * spec.surgeRate);
+    const driven = level * spec.gain * (0.3 + 1.35 * surge);
+    const idle = IDLE * (0.5 + 1.0 * (0, noise_1.wobble01)(spec.seed + 17.9, time * spec.surgeRate * 0.55));
+    return softLimit(idle + driven);
+}
+function makeTongues(count) {
+    const tongues = [];
+    const total = Math.max(1, Math.floor(count));
+    for (let i = 0; i < total; i += 1) {
+        const seed = i * 7.13 + 1;
+        const even = total === 1 ? 0 : (i / (total - 1)) * 2 - 1;
+        const jitter = (0, noise_1.wobble)(seed + 3.1, 0.7) * (0.85 / Math.max(1, total - 1));
+        const centrality = 1 - Math.abs(even) ** 1.4;
+        tongues.push({
+            seed,
+            offset: clamp(even * 0.86 + jitter, -1, 1),
+            restHeight: (0.34 + 0.52 * centrality) * (0.82 + 0.32 * (0, noise_1.wobble01)(seed + 11.7, 2.3)),
+            restWidth: 0.55 + 0.7 * (0, noise_1.wobble01)(seed + 23.9, 1.1),
+            gain: 0.3 + 1.65 * (0, noise_1.wobble01)(seed + 31.3, 3.7),
+            surgeRate: 0.7 + 1.9 * (0, noise_1.wobble01)(seed + 47.1, 5.2),
+            attack: 0.14 + 0.55 * (0, noise_1.wobble01)(seed + 53.9, 1.9),
+            release: 0.03 + 0.09 * (0, noise_1.wobble01)(seed + 67.3, 4.1),
+        });
+    }
+    return tongues;
+}
+function tongueSpread(reach) {
+    if (!Number.isFinite(reach))
+        return 0.72;
+    return 0.72 + 0.34 * Math.min(1.6, Math.max(0, reach));
+}
+function clamp(value, low, high) {
+    if (!Number.isFinite(value))
+        return low;
+    return Math.min(high, Math.max(low, value));
+}
+
+return exports; })();
+__m['flameSettings'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FLAME_SETTING_RANGES = exports.DEFAULT_FLAME_SETTINGS = exports.VIEWPORT = exports.SCENE = void 0;
+exports.clampSetting = clampSetting;
+exports.normaliseSettings = normaliseSettings;
+exports.SCENE = {
+    width: 520,
+    height: 430,
+    baseY: 338,
+};
+exports.VIEWPORT = {
+    x: 80,
+    y: 120,
+    width: 360,
+    height: 290,
+};
+exports.DEFAULT_FLAME_SETTINGS = {
+    tongues: 7,
+    layers: 3,
+    height: 212,
+    width: 22,
+    sway: 30,
+    flutter: 5,
+    tipSharpness: 1.8,
+    segments: 36,
+};
+exports.FLAME_SETTING_RANGES = [
+    { key: 'tongues', label: 'Tongues', min: 3, max: 13, step: 1, decimals: 0 },
+    { key: 'layers', label: 'Glow layers', min: 1, max: 3, step: 1, decimals: 0 },
+    { key: 'height', label: 'Peak height', min: 90, max: exports.SCENE.baseY - 12, step: 2, decimals: 0 },
+    { key: 'width', label: 'Belly width', min: 8, max: 170, step: 2, decimals: 0 },
+    { key: 'sway', label: 'Sway', min: 0, max: 160, step: 2, decimals: 0 },
+    { key: 'flutter', label: 'Flutter', min: 0, max: 34, step: 1, decimals: 0 },
+    { key: 'tipSharpness', label: 'Tip sharpness', min: 0.4, max: 2.6, step: 0.05, decimals: 2 },
+    { key: 'segments', label: 'Segments', min: 5, max: 36, step: 1, decimals: 0 },
+];
+function clampSetting(key, value) {
+    const range = exports.FLAME_SETTING_RANGES.find((entry) => entry.key === key);
+    if (!range)
+        return value;
+    if (!Number.isFinite(value))
+        return exports.DEFAULT_FLAME_SETTINGS[key];
+    const bounded = Math.min(range.max, Math.max(range.min, value));
+    const stepped = Math.round((bounded - range.min) / range.step) * range.step + range.min;
+    const settled = Math.min(range.max, Math.max(range.min, stepped));
+    const factor = 10 ** range.decimals;
+    return Math.round(settled * factor) / factor;
+}
+function normaliseSettings(stored) {
+    const result = { ...exports.DEFAULT_FLAME_SETTINGS };
+    if (!stored || typeof stored !== 'object')
+        return result;
+    for (const range of exports.FLAME_SETTING_RANGES) {
+        const value = stored[range.key];
+        if (typeof value === 'number') {
+            result[range.key] = clampSetting(range.key, value);
+        }
+    }
+    return result;
+}
+
+return exports; })();
+__m['trackAnalysis'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EMPTY_ANALYSIS = void 0;
+exports.percentile = percentile;
+exports.percentileRange = percentileRange;
+exports.buildTrackAnalysis = buildTrackAnalysis;
+exports.sampleAnalysis = sampleAnalysis;
+const features_1 = require("./features");
+exports.EMPTY_ANALYSIS = { hopMs: 40, amplitude: [], brightness: [] };
+const LOW_PERCENTILE = 0.05;
+const HIGH_PERCENTILE = 0.95;
+const MIN_DB_RANGE = 6;
+const MIN_OCTAVE_RANGE = 0.5;
+function percentile(sorted, fraction) {
+    if (sorted.length === 0)
+        return 0;
+    if (sorted.length === 1)
+        return sorted[0];
+    const position = (0, features_1.clamp01)(fraction) * (sorted.length - 1);
+    const lower = Math.floor(position);
+    const upper = Math.ceil(position);
+    if (lower === upper)
+        return sorted[lower];
+    return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+}
+function percentileRange(values) {
+    const usable = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+    if (usable.length === 0)
+        return [0, 0];
+    return [percentile(usable, LOW_PERCENTILE), percentile(usable, HIGH_PERCENTILE)];
+}
+function buildTrackAnalysis(raw) {
+    const frameCount = Math.min(raw.rms.length, raw.centroidHz.length);
+    if (frameCount === 0)
+        return { ...exports.EMPTY_ANALYSIS, hopMs: raw.hopMs || exports.EMPTY_ANALYSIS.hopMs };
+    const decibels = [];
+    const octaves = [];
+    for (let i = 0; i < frameCount; i += 1) {
+        const energy = raw.rms[i];
+        decibels.push(energy > 0 ? 20 * Math.log10(energy) : features_1.QUIET_DB);
+        const hz = raw.centroidHz[i];
+        octaves.push(hz > 0 ? Math.log2(hz) : Math.log2(features_1.DARK_HZ));
+    }
+    const [dbLow, dbHigh] = rangeOrFallback(percentileRange(decibels), MIN_DB_RANGE, [features_1.QUIET_DB, features_1.LOUD_DB]);
+    const [octaveLow, octaveHigh] = rangeOrFallback(percentileRange(octaves), MIN_OCTAVE_RANGE, [Math.log2(features_1.DARK_HZ), Math.log2(features_1.BRIGHT_HZ)]);
+    return {
+        hopMs: raw.hopMs,
+        amplitude: decibels.map((db) => (0, features_1.clamp01)((db - dbLow) / (dbHigh - dbLow))),
+        brightness: octaves.map((oct) => (0, features_1.clamp01)((oct - octaveLow) / (octaveHigh - octaveLow))),
+    };
+}
+function sampleAnalysis(analysis, seconds) {
+    const { amplitude, brightness, hopMs } = analysis;
+    if (amplitude.length === 0)
+        return { amplitude: 0, brightness: 0 };
+    const position = (Math.max(0, seconds) * 1000) / hopMs;
+    const lower = Math.floor(position);
+    if (lower >= amplitude.length - 1) {
+        const last = amplitude.length - 1;
+        return { amplitude: amplitude[last], brightness: brightness[last] };
+    }
+    const t = position - lower;
+    return {
+        amplitude: amplitude[lower] + (amplitude[lower + 1] - amplitude[lower]) * t,
+        brightness: brightness[lower] + (brightness[lower + 1] - brightness[lower]) * t,
+    };
+}
+function rangeOrFallback([low, high], minimumSpan, fallback) {
+    return high - low >= minimumSpan ? [low, high] : fallback;
+}
+
+return exports; })();
+__m['sparks'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SPARK_COUNT = void 0;
+exports.makeSparkStates = makeSparkStates;
+exports.sparkRate = sparkRate;
+exports.sparkPhase = sparkPhase;
+exports.buildSparks = buildSparks;
+const noise_1 = require("./noise");
+exports.SPARK_COUNT = 22;
+function makeSparkStates(count = exports.SPARK_COUNT) {
+    return Array.from({ length: count }, () => ({ cycle: -1, launchEnergy: 0 }));
+}
+function sparkRate(index) {
+    return 0.22 + 0.16 * (index % 5);
+}
+function sparkPhase(index, count = exports.SPARK_COUNT) {
+    return index / count;
+}
+function buildSparks(input) {
+    const { states, time, energy, centreX, baseY, width, height } = input;
+    const count = states.length;
+    const sparks = [];
+    for (let s = 0; s < count; s += 1) {
+        const state = states[s];
+        const raw = time * sparkRate(s) + sparkPhase(s, count);
+        const cycle = Math.floor(raw);
+        const life = raw - cycle;
+        if (cycle !== state.cycle) {
+            state.cycle = cycle;
+            state.launchEnergy = Number.isFinite(energy) ? energy : 0;
+        }
+        const launch = state.launchEnergy;
+        const rise = life ** 0.85;
+        const seed = 40 + s * 3.3;
+        sparks.push({
+            cx: finite(centreX + (0, noise_1.wobble)(seed, time * 0.7 + life * 3) * width * 1.9, centreX),
+            cy: finite(baseY - rise * height * 0.9 * launch, baseY),
+            r: Math.max(0, finite(0.7 + 1.5 * (1 - rise) * launch)),
+            opacity: Math.max(0, finite((1 - rise) * 0.6 * launch)),
+        });
+    }
+    return sparks;
+}
+function finite(value, fallback = 0) {
+    return Number.isFinite(value) ? value : fallback;
+}
+
+return exports; })();
+__m['flameFrame'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EMPTY_FRAME = exports.GLOW_STOPS = exports.HALO_SCALE = void 0;
+exports.safe = safe;
+exports.buildFlameFrame = buildFlameFrame;
+const envelope_1 = require("./envelope");
+const flameColour_1 = require("./flameColour");
+const flameDrive_1 = require("./flameDrive");
+const flameShape_1 = require("./flameShape");
+const flameSettings_1 = require("./flameSettings");
+const sparks_1 = require("./sparks");
+exports.HALO_SCALE = 1.24;
+exports.GLOW_STOPS = [
+    { offset: '0%', weight: 0.44 },
+    { offset: '30%', weight: 0.26 },
+    { offset: '62%', weight: 0.09 },
+    { offset: '100%', weight: 0 },
+];
+exports.EMPTY_FRAME = {
+    paths: [],
+    opacities: [],
+    colour: 'rgb(148, 0, 211)',
+    glowRx: 0,
+    glowRy: 0,
+    glowOpacity: 0,
+    sparks: [],
+    brightness: 0,
+};
+function safe(value, fallback = 0) {
+    return Number.isFinite(value) ? value : fallback;
+}
+function buildFlameFrame(input) {
+    const { settings, tongues, levels, sparkStates, time } = input;
+    const amplitude = safe(input.amplitude);
+    const brightness = (0, envelope_1.follow)(safe(input.previousBrightness), safe(input.brightness), envelope_1.COLOUR_RATES);
+    const colour = (0, flameColour_1.flameColour)(brightness);
+    const colourString = `rgb(${colour.r}, ${colour.g}, ${colour.b})`;
+    const heightUnit = safe(settings.height / (flameDrive_1.MAX_REACH * exports.HALO_SCALE));
+    const paths = [];
+    const opacities = [];
+    for (let i = 0; i < tongues.length; i += 1) {
+        const tongue = tongues[i];
+        levels[i] = safe((0, envelope_1.follow)(safe(levels[i] ?? 0), amplitude, tongue));
+        const reach = safe((0, flameDrive_1.tongueEnergy)(tongue, time, levels[i]));
+        const spread = (0, flameDrive_1.tongueSpread)(reach);
+        for (let layer = 0; layer < settings.layers; layer += 1) {
+            const depth = settings.layers === 1 ? 1 : layer / (settings.layers - 1);
+            const scale = exports.HALO_SCALE - (exports.HALO_SCALE - 1) * depth;
+            paths.push((0, flameShape_1.toPathData)((0, flameShape_1.flameOutline)({
+                seed: tongue.seed + layer * 0.31,
+                time,
+                centreX: flameSettings_1.SCENE.width / 2 + tongue.offset * settings.width * 1.45,
+                baseY: flameSettings_1.SCENE.baseY,
+                height: safe(heightUnit * tongue.restHeight * reach * scale),
+                width: safe(settings.width * tongue.restWidth * spread * scale),
+                sway: safe(settings.sway * (0.45 + 0.75 * Math.min(1.4, reach))),
+                flutter: safe(settings.flutter),
+                tipSharpness: settings.tipSharpness,
+                segments: settings.segments,
+            })));
+            opacities.push(safe(0.16 + 0.42 * depth));
+        }
+    }
+    const energy = 0.18 + 0.82 * amplitude;
+    const glowBreath = 0.72 + 0.5 * energy;
+    const sparks = (0, sparks_1.buildSparks)({
+        states: sparkStates,
+        time,
+        energy,
+        centreX: flameSettings_1.SCENE.width / 2,
+        baseY: flameSettings_1.SCENE.baseY,
+        width: settings.width,
+        height: settings.height,
+    });
+    return {
+        paths,
+        opacities,
+        colour: colourString,
+        glowRx: Math.max(0, safe((130 + settings.width * 2.2) * glowBreath)),
+        glowRy: Math.max(0, safe((64 + settings.height * 0.16) * glowBreath)),
+        glowOpacity: safe(0.34 + 0.86 * amplitude),
+        sparks,
+        brightness,
+    };
+}
+
+return exports; })();
+__m['starField'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.STREAK_SEGMENTS = exports.SHOOTING_DURATION = exports.SHOOTING_PERIOD = exports.SKY_SEED = exports.SKY_DEPTH = exports.TWINKLE_GROUPS = void 0;
+exports.makeStars = makeStars;
+exports.shootingStar = shootingStar;
+exports.isShooting = isShooting;
+exports.TWINKLE_GROUPS = [
+    { period: 3.1, phase: 0.0, low: 0.58 },
+    { period: 4.3, phase: 1.7, low: 0.7 },
+    { period: 2.6, phase: 0.9, low: 0.52 },
+    { period: 5.9, phase: 3.4, low: 0.78 },
+    { period: 3.7, phase: 2.2, low: 0.62 },
+    { period: 6.7, phase: 4.8, low: 0.84 },
+    { period: 2.9, phase: 1.3, low: 0.55 },
+];
+exports.SKY_DEPTH = 0.38;
+exports.SKY_SEED = 20260902;
+exports.SHOOTING_PERIOD = 11;
+exports.SHOOTING_DURATION = 1.1;
+exports.STREAK_SEGMENTS = 7;
+const CROSSINGS = [
+    { x: -0.06, y: 0.07, dir: 1, span: 0.64, drop: 0.14 },
+    { x: 0.94, y: 0.15, dir: -1, span: 0.58, drop: 0.19 },
+    { x: 0.12, y: 0.04, dir: 1, span: 0.47, drop: 0.11 },
+    { x: 1.02, y: 0.09, dir: -1, span: 0.71, drop: 0.16 },
+    { x: -0.02, y: 0.19, dir: 1, span: 0.55, drop: 0.09 },
+    { x: 0.86, y: 0.05, dir: -1, span: 0.5, drop: 0.21 },
+];
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function makeStars(count, width, height, seed = exports.SKY_SEED) {
+    if (!(width > 0) || !(height > 0) || !(count > 0))
+        return [];
+    const random = mulberry32(seed);
+    const stars = [];
+    for (let i = 0; i < count; i += 1) {
+        const depth = random() ** 1.8;
+        stars.push({
+            x: width * random(),
+            y: height * (0.015 + exports.SKY_DEPTH * depth),
+            r: 0.4 + 0.9 * random() ** 2,
+            opacity: (0.42 + 0.58 * random()) * (1 - 0.42 * depth),
+            group: Math.floor(random() * exports.TWINKLE_GROUPS.length) % exports.TWINKLE_GROUPS.length,
+        });
+    }
+    return stars;
+}
+function shootingStar(time, width, height) {
+    if (!Number.isFinite(time) || !(width > 0) || !(height > 0))
+        return [];
+    const cycle = Math.floor(time / exports.SHOOTING_PERIOD);
+    const elapsed = time - cycle * exports.SHOOTING_PERIOD;
+    if (elapsed > exports.SHOOTING_DURATION)
+        return [];
+    const crossing = CROSSINGS[((cycle % CROSSINGS.length) + CROSSINGS.length) % CROSSINGS.length];
+    const progress = elapsed / exports.SHOOTING_DURATION;
+    const span = width * crossing.span;
+    const drop = height * crossing.drop;
+    const headX = width * crossing.x + crossing.dir * span * progress;
+    const headY = height * crossing.y + drop * progress;
+    const envelope = Math.sin(Math.PI * progress);
+    const tailLength = width * 0.16;
+    const slope = drop / (span || 1);
+    const segments = [];
+    for (let i = 0; i < exports.STREAK_SEGMENTS; i += 1) {
+        const near = i / exports.STREAK_SEGMENTS;
+        const far = (i + 1) / exports.STREAK_SEGMENTS;
+        segments.push({
+            x1: headX - crossing.dir * tailLength * near,
+            y1: headY - tailLength * near * slope,
+            x2: headX - crossing.dir * tailLength * far,
+            y2: headY - tailLength * far * slope,
+            opacity: Math.max(0, envelope * 0.85 * (1 - near) ** 1.6),
+            width: Math.max(0.3, 1.7 * (1 - near)),
+        });
+    }
+    return segments;
+}
+function isShooting(time) {
+    if (!Number.isFinite(time))
+        return false;
+    return time - Math.floor(time / exports.SHOOTING_PERIOD) * exports.SHOOTING_PERIOD <= exports.SHOOTING_DURATION;
+}
+
+return exports; })();
+var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField']);
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = RATIO;
+  var SCENE = S.SCENE;
+  var VIEWPORT = S.VIEWPORT;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // Matches components/Bonfire.tsx. Repeated rather than imported because the logs are
+  // presentation, not maths, and live in the component.
+  var LOGS = [
+    { x: -62, y: -3, w: 124, h: 9, rotate: -9, fill: '#33200F' },
+    { x: -26, y: 5, w: 107, h: 8, rotate: 8, fill: '#28190C' },
+    { x: -75, y: 8, w: 88, h: 8, rotate: 4, fill: '#3A2513' },
+    { x: -42, y: 15, w: 95, h: 7, rotate: -3, fill: '#221408' }
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+
+  /**
+   * Writes to a readout if it is still on the page.
+   *
+   * Not defensive for its own sake. `measure()` runs before the frame is built, so a missing
+   * element there threw on every single frame and the fire simply never drew — the wood and
+   * the stars stayed up because they are painted once, which made it look like a rendering
+   * problem rather than a dead loop.
+   */
+  var setText = function (id, text) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = text;
+  };
+
+  /**
+   * The twinkle keyframes, written once from the same table the app uses.
+   *
+   * Generated rather than hand-written so the preview cannot drift from `TWINKLE_GROUPS`,
+   * and injected once — this is not per-frame work, it is a stylesheet.
+   */
+  (function installTwinkle() {
+    var css = ['.tw { animation-iteration-count: infinite; animation-timing-function: ease-in-out; }'];
+    RATIO.TWINKLE_GROUPS.forEach(function (group, index) {
+      css.push('.tw' + index + ' { animation-name: tw' + index + '; }');
+      css.push(
+        '@keyframes tw' + index + ' { 0%, 100% { opacity: ' + group.low + '; } 50% { opacity: 1; } }'
+      );
+    });
+    css.push('@media (prefers-reduced-motion: reduce) { .tw { animation: none; opacity: 0.85; } }');
+
+    var style = document.createElement('style');
+    style.textContent = css.join(' ');
+    document.head.appendChild(style);
+  })();
+  var svgEl = function (name, attrs) {
+    var node = document.createElementNS(NS, name);
+    for (var key in attrs) if (attrs[key] !== undefined && attrs[key] !== null) {
+      node.setAttribute(key, attrs[key]);
+    }
+    return node;
+  };
+
+  /* ------------------------------------------------------------------ state */
+  var settings = Object.assign({}, S.DEFAULT_FLAME_SETTINGS);
+  var tongues = S.makeTongues(settings.tongues);
+  var levels = tongues.map(function () { return 0; });
+  var sparkStates = S.makeSparkStates();
+  var previousBrightness = 0;
+
+  var running = true;
+  var clock = 0;
+  var skyClock = S.SHOOTING_DURATION + 2;
+  var ampOverride = null;
+  var brightOverride = 0.5;
+  var cutAt = null;
+  var DENSITY = 5.2;
+
+  // The dials, starting at the previous build's values. The middle layer is interpolated
+  // between halo and core, so these two cover the whole layer ramp.
+  var vivid = 0;
+  var stars = [];
+  var skySize = { width: 0, height: 0 };
+
+  /* ------------------------------------------------------------------- fire */
+  var fire = el('fire');
+  fire.setAttribute('viewBox', VIEWPORT.x + ' ' + VIEWPORT.y + ' ' + VIEWPORT.width + ' ' + VIEWPORT.height);
+  fire.setAttribute('preserveAspectRatio', 'xMidYMax meet');
+
+  var defs = svgEl('defs');
+  var grad = svgEl('radialGradient', { id: 'flameGlowPreview' });
+  // The same table the component uses, so the preview cannot drift from the app.
+  var stops = S.GLOW_STOPS.map(function (entry) {
+    var stop = svgEl('stop', { offset: entry.offset });
+    stop.dataset.weight = entry.weight;
+    grad.appendChild(stop);
+    return stop;
+  });
+  defs.appendChild(grad);
+  fire.appendChild(defs);
+
+  var logGroup = svgEl('g');
+  LOGS.forEach(function (log) {
+    var cx = SCENE.width / 2 + log.x + log.w / 2;
+    var cy = SCENE.baseY + log.y + log.h / 2;
+    logGroup.appendChild(svgEl('rect', {
+      x: SCENE.width / 2 + log.x, y: SCENE.baseY + log.y,
+      width: log.w, height: log.h, rx: log.h / 2, fill: log.fill,
+      transform: 'rotate(' + log.rotate + ' ' + cx + ' ' + cy + ')'
+    }));
+  });
+  fire.appendChild(logGroup);
+
+  var glow = svgEl('ellipse', {
+    cx: SCENE.width / 2, cy: SCENE.baseY + 14, fill: 'url(#flameGlowPreview)'
+  });
+  fire.appendChild(glow);
+
+  var pathGroup = svgEl('g');
+  var sparkGroup = svgEl('g');
+  fire.appendChild(pathGroup);
+  fire.appendChild(sparkGroup);
+
+  var pathNodes = [];
+  var sparkNodes = [];
+
+  /* -------------------------------------------------------------------- sky */
+  var sky = el('sky');
+  var streakGroup = svgEl('g');
+
+
+  function buildSky(width, height) {
+    while (sky.firstChild) sky.removeChild(sky.firstChild);
+    skySize = { width: width, height: height };
+    sky.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+    // Same density rule as components/Starfield.tsx, unless overridden below.
+    var count = Math.min(180, Math.round((width * height * DENSITY) / 10000));
+    stars = S.makeStars(count, width, height);
+
+    // One <g> per twinkle group, animated by CSS keyframes. Each star's own brightness is
+    // baked in and never touched again; the blink belongs to its group and runs on the
+    // compositor, so nothing here is recomputed once the sky is built.
+    var groups = S.TWINKLE_GROUPS.map(function (group, index) {
+      var g = svgEl('g', { class: 'tw tw' + index });
+      g.style.animationDuration = group.period + 's';
+      g.style.animationDelay = '-' + group.phase + 's';
+      sky.appendChild(g);
+      return g;
+    });
+
+    stars.forEach(function (star) {
+      groups[star.group].appendChild(svgEl('circle', {
+        cx: star.x, cy: star.y, r: star.r, fill: '#FFFFFF', 'fill-opacity': star.opacity
+      }));
+    });
+
+    sky.appendChild(streakGroup);
+    setText('rStars', stars.length + ' stars');
+  }
+
+  /* ----------------------------------------------------------------- layout */
+  function measure() {
+    var stage = el('stage');
+    var width = stage.clientWidth;
+    var height = stage.clientHeight;
+    if (width < 1 || height < 1) return;
+
+    if (width !== skySize.width || height !== skySize.height) buildSky(width, height);
+
+    var scaleX = width / VIEWPORT.width;
+    var scaleY = height / VIEWPORT.height;
+    var scale = Math.min(scaleX, scaleY);
+    var binds = scaleX < scaleY ? 'width' : 'height';
+    var drawnH = VIEWPORT.height * scale;
+    var band = height - drawnH;
+
+    setText('rStage', width + ' × ' + height + ' dp');
+    setText('rViewBox', VIEWPORT.width + ' × ' + VIEWPORT.height + ' units');
+    setText('rScale', scale.toFixed(3) + '× (' + binds + ' binds)');
+    setText('rDrawn', Math.round(VIEWPORT.width * scale) + ' × ' + Math.round(drawnH) + ' dp');
+    setText('rBand', Math.round(band) + ' dp (' + Math.round((band / height) * 100) + '% of the stage)');
+
+    var mark = el('bandMark');
+    mark.style.height = band + 'px';
+    setText('bandLabel', Math.round(band) + 'dp of sky');
+  }
+
+  /**
+   * The phone is a fixed dp grid; only the whole thing scales to fit the window.
+   *
+   * On a narrow screen — which is to say, on an actual phone — it is scaled to the width and
+   * allowed to run past the fold instead of being shrunk to fit the height. A Pixel-class
+   * browser viewport is about 412dp wide, so that lands at roughly 1:1 and the fire is being
+   * judged at the size it will really be. Shrinking it to fit would defeat the purpose.
+   */
+  function fitPhone() {
+    var scaler = el('scaler');
+    var narrow = window.innerWidth < 900;
+    // True scale on a phone: the viewport is measured directly, because the page padding is
+    // removed at this width precisely so nothing eats into the 412dp.
+    var scale = narrow
+      ? Math.min(1, window.innerWidth / 412)
+      : Math.min(
+          1,
+          Math.max(320, window.innerHeight - 260) / 892,
+          scaler.parentElement.clientWidth / 412,
+        );
+
+    scaler.style.transform = 'scale(' + scale + ')';
+    scaler.style.height = 892 * scale + 'px';
+    scaler.style.width = 412 * scale + 'px';
+  }
+
+  /* ------------------------------------------------------------------ drive */
+  function loudness(t) {
+    if (cutAt !== null && t >= cutAt) return 0;
+    if (ampOverride !== null) return ampOverride;
+    // A four-beat bar with a stronger downbeat, so the fire has something to answer.
+    var beat = (t * 2) % 4;
+    var hit = Math.exp(-4 * (beat % 1));
+    var accent = beat < 1 ? 1 : 0.62;
+    return Math.min(1, 0.18 + 0.82 * hit * accent);
+  }
+
+  function timbre(t) {
+    if (brightOverride !== null) return brightOverride;
+    return 0.5 + 0.5 * Math.sin(t * 0.21);
+  }
+
+  /* ------------------------------------------------------------------- loop */
+  var lastFrame = 0;
+  var wasShooting = false;
+  var fpsAt = 0;
+  var frames = 0;
+
+  function draw(now) {
+    requestAnimationFrame(draw);
+
+    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0.016;
+    lastFrame = now;
+    if (running) { clock += dt; skyClock += dt; }
+
+    measure();
+
+    var frame = S.buildFlameFrame({
+      settings: settings,
+      tongues: tongues,
+      levels: levels,
+      sparkStates: sparkStates,
+      amplitude: loudness(clock),
+      brightness: timbre(clock),
+      previousBrightness: previousBrightness,
+      time: clock
+    });
+    previousBrightness = frame.brightness;
+
+    // Guarded exactly as the component is: a zero-radius shape under a radial gradient is a
+    // native crash on Android, and the same shape simply vanishes here.
+    // Scale the colour's channels, which is the same lever `flameColour` pulls: hue and
+    // saturation hold, value moves.
+    // A pure value lift: every channel scaled by the same factor, so hue and saturation are
+    // arithmetically unchanged — HSV saturation is (max - min) / max, and a common scale
+    // cancels out of it. Nothing is clamped, which is what kept the earlier multiplier from
+    // being this: clamping caps channels one at a time and walks the colour toward white.
+    var rgb = frame.colour.match(/\d+/g).map(Number);
+    var shown = frame.colour;
+    if (vivid > 0) {
+      var peak = Math.max(rgb[0], rgb[1], rgb[2]);
+      if (peak > 0) {
+        var k = 1 + vivid * (255 / peak - 1);
+        shown = 'rgb(' + rgb.map(function (c) { return Math.round(c * k); }).join(', ') + ')';
+      }
+    }
+
+    var visible = frame.glowRx > 0 && frame.glowRy > 0;
+    glow.style.display = visible ? '' : 'none';
+    if (visible) {
+      glow.setAttribute('rx', frame.glowRx);
+      glow.setAttribute('ry', frame.glowRy);
+      stops.forEach(function (stop) {
+        stop.setAttribute('stop-color', shown);
+        stop.setAttribute('stop-opacity', Number(stop.dataset.weight) * frame.glowOpacity);
+      });
+    }
+
+    while (pathNodes.length < frame.paths.length) {
+      var p = svgEl('path'); pathGroup.appendChild(p); pathNodes.push(p);
+    }
+    pathNodes.forEach(function (node, i) {
+      if (i < frame.paths.length) {
+        node.setAttribute('d', frame.paths[i]);
+        node.setAttribute('fill', shown);
+        node.setAttribute('fill-opacity', frame.opacities[i]);
+        node.style.display = '';
+      } else {
+        node.style.display = 'none';
+      }
+    });
+
+    while (sparkNodes.length < frame.sparks.length) {
+      var c = svgEl('circle'); sparkGroup.appendChild(c); sparkNodes.push(c);
+    }
+    sparkNodes.forEach(function (node, i) {
+      var spark = frame.sparks[i];
+      if (!spark) { node.style.display = 'none'; return; }
+      node.style.display = '';
+      node.setAttribute('cx', spark.cx);
+      node.setAttribute('cy', spark.cy);
+      node.setAttribute('r', spark.r);
+      node.setAttribute('fill', shown);
+      node.setAttribute('fill-opacity', spark.opacity);
+    });
+
+    // The stars are static, so the only sky work is the shooting star — and only while one
+    // is actually crossing, which is about a tenth of the time. Same rule as Starfield.tsx.
+    if (S.isShooting(skyClock)) {
+      wasShooting = true;
+      while (streakGroup.firstChild) streakGroup.removeChild(streakGroup.firstChild);
+      S.shootingStar(skyClock, skySize.width, skySize.height).forEach(function (streak) {
+        streakGroup.appendChild(svgEl('line', {
+          x1: streak.x1, y1: streak.y1, x2: streak.x2, y2: streak.y2,
+          stroke: '#FFFFFF', 'stroke-opacity': streak.opacity,
+          'stroke-width': streak.width, 'stroke-linecap': 'round'
+        }));
+      });
+    } else if (wasShooting) {
+      wasShooting = false;
+      while (streakGroup.firstChild) streakGroup.removeChild(streakGroup.firstChild);
+    }
+
+    frames += 1;
+    if (now - fpsAt > 500) {
+      setText('rFps', Math.round((frames * 1000) / (now - fpsAt)) + ' fps');
+      fpsAt = now; frames = 0;
+    }
+  }
+
+  /* --------------------------------------------------------------- controls */
+
+
+
+
+
+
+
+
+  (function bindColour() {
+    var slider = el('colour');
+    var button = el('sweep');
+    var NAMES = ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red'];
+
+    var show = function () {
+      var pinned = brightOverride !== null;
+      var t = Number(slider.value) / 100;
+      var colour = S.flameColour(t);
+
+      setText('colourOut', pinned ? t.toFixed(2) : 'sweeping');
+      setText(
+        'colourHint',
+        NAMES[Math.round(t * (NAMES.length - 1))] +
+          ' - rgb(' + colour.r + ', ' + colour.g + ', ' + colour.b + ')',
+      );
+
+      button.textContent = pinned ? 'Pinned' : 'Sweeping';
+      button.setAttribute('aria-pressed', String(!pinned));
+    };
+
+    // This is the line that actually recolours the fire; without it the readouts move and
+    // nothing else does.
+    slider.addEventListener('input', function () {
+      brightOverride = Number(slider.value) / 100;
+      show();
+    });
+
+    button.addEventListener('click', function () {
+      brightOverride = brightOverride === null ? Number(slider.value) / 100 : null;
+      show();
+    });
+
+    show();
+  })();
+
+  (function bindVivid() {
+    var input = el('vivid');
+    var update = function () {
+      vivid = Number(input.value) / 100;
+      setText('vividOut', vivid.toFixed(2));
+
+      // Shown on whatever colour is pinned, so the number means something specific.
+      var t = Number(el('colour').value) / 100;
+      var c = S.flameColour(t);
+      var peak = Math.max(c.r, c.g, c.b);
+      var k = 1 + vivid * (255 / peak - 1);
+      setText(
+        'vividHint',
+        'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ') -> rgb(' +
+          [c.r, c.g, c.b].map(function (x) { return Math.round(x * k); }).join(', ') + ')',
+      );
+    };
+    input.addEventListener('input', update);
+    el('colour').addEventListener('input', update);
+    update();
+  })();
+
+  window.addEventListener('resize', fitPhone);
+  fitPhone();
+  requestAnimationFrame(draw);
+})();
+</script>

@@ -1,0 +1,1003 @@
+<title>Flame Swatches</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  /*
+    Deliberately single-theme, and deliberately the app's own black.
+
+    This page is a measuring instrument: it has to sit on exactly the ground the visualiser
+    sits on (#0B0B10), because the whole question is which faint colours a panel can still
+    separate from that ground. Following the viewer's light theme would destroy the reading.
+    Every colour here is written explicitly for the same reason.
+  */
+  body {
+    margin: 0;
+    background: #0B0B10;
+    color: #8A8A99;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 560px; margin: 0 auto; padding: 20px 14px 64px; }
+
+  h1 { margin: 0 0 6px; font-size: 15px; font-weight: 500; color: #D8D8E4; letter-spacing: 0.01em; }
+
+  .lede { margin: 0 0 4px; max-width: 46em; }
+  .lede b { color: #C4C4D2; font-weight: 500; }
+
+  h2 {
+    margin: 30px 0 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #6F6F80;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .note { margin: 0 0 12px; color: #63636F; max-width: 46em; }
+
+  /* The grid. One row per ramp colour, one column per alpha. */
+  .grid { display: grid; gap: 2px; }
+  .row { display: grid; grid-template-columns: 34px repeat(var(--cols), minmax(0, 1fr)); gap: 2px; align-items: stretch; }
+
+  .rowlabel {
+    display: flex;
+    align-items: center;
+    font-size: 9.5px;
+    color: #5C5C68;
+    letter-spacing: 0.02em;
+  }
+
+  .cell { height: 40px; border-radius: 2px; }
+
+  /* Column numbers, and a caret under the alphas the fire actually uses. */
+  .heads .cell { height: auto; text-align: center; font-size: 9.5px; color: #55555F; padding-bottom: 2px; }
+  .heads .cell.used { color: #A99BFF; }
+  .heads .cell b { display: block; font-weight: 500; font-size: 10px; }
+  .heads .cell span { display: block; font-size: 8.5px; letter-spacing: 0.02em; }
+
+  .labels-off .rowlabel,
+  .labels-off .heads { visibility: hidden; }
+
+  button {
+    font: inherit;
+    font-size: 11px;
+    color: #B9B9C8;
+    background: #17171F;
+    border: 1px solid #26262F;
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    margin-top: 14px;
+  }
+
+  button:hover { border-color: #3A3A47; }
+  button:focus-visible { outline: 2px solid #7C5CFF; outline-offset: 2px; }
+
+  .glowstrip { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .glowstrip figure { margin: 0; }
+  .glowstrip svg { display: block; width: 100%; height: 92px; }
+  .glowstrip figcaption { font-size: 9.5px; color: #55555F; padding-top: 3px; }
+
+  footer { margin-top: 34px; color: #55555F; max-width: 46em; }
+  code { color: #9A8CFF; }
+</style>
+
+<div class="page" id="page">
+  <h1>Flame Swatches</h1>
+
+  <p class="lede">
+    Every colour and opacity the fire is actually drawn with, on the app's own black. Look at
+    this at your <b>normal</b> screen brightness, ideally in a dim room.
+  </p>
+  <p class="lede">
+    For each row, find the <b>leftmost column you can still see</b> and remember its number.
+    That is where your panel stops separating the fire from the background — and it is the
+    number I need, not a judgement about whether it looks good.
+  </p>
+
+  <h2>Flame layers</h2>
+  <p class="note">
+    Violet through red, the seven stops of the ramp. Marked columns are the three layer
+    opacities in use: the outer halo, the middle layer, and the core.
+  </p>
+  <div class="grid" id="layers"></div>
+
+  <h2>The glow</h2>
+  <p class="note">
+    A gradient, not a flat fill, so it is shown as drawn. Left is silence, right is a loud
+    passage. If the fire loses its halo at normal brightness, it shows up here first.
+  </p>
+  <div class="glowstrip" id="glow"></div>
+
+  <h2>White reference</h2>
+  <p class="note">
+    The same alphas in plain white. If white survives at a column where the colours do not,
+    the panel is crushing colour rather than brightness — a different problem with a different
+    fix. The stars are drawn in this range too.
+  </p>
+  <div class="grid" id="white"></div>
+
+  <button id="toggle" aria-pressed="false">Hide labels</button>
+
+  <footer>
+    <p>
+      Screenshots of this page cannot answer the question: a screenshot stores the values, and
+      brightness is applied after them by the panel. Only your eyes on the real screen, or a
+      photograph of it with exposure locked, can.
+    </p>
+  </footer>
+</div>
+
+<script>
+// Compiled from src/visualiser/*.ts by preview/build.js — the shipping code, not a copy.
+var __m = {};
+function __req(id){ return __m[id.replace('./','')]; }
+__m['noise'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.wobble = wobble;
+exports.wobble01 = wobble01;
+const OCTAVES = 3;
+const LACUNARITY = 1.87;
+const GAIN = 0.5;
+function phaseFor(seed) {
+    return ((Math.sin(seed * 127.1 + 311.7) * 43758.5453) % 1) * Math.PI * 2;
+}
+function wobble(seed, t) {
+    let value = 0;
+    let amplitude = 1;
+    let frequency = 1;
+    let total = 0;
+    for (let octave = 0; octave < OCTAVES; octave += 1) {
+        value += Math.sin(t * frequency + phaseFor(seed + octave * 17.3)) * amplitude;
+        total += amplitude;
+        frequency *= LACUNARITY;
+        amplitude *= GAIN;
+    }
+    return total > 0 ? value / total : 0;
+}
+function wobble01(seed, t) {
+    return (wobble(seed, t) + 1) / 2;
+}
+
+return exports; })();
+__m['fft'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.largestPowerOfTwo = largestPowerOfTwo;
+exports.hannWindow = hannWindow;
+exports.fftInPlace = fftInPlace;
+exports.magnitudeSpectrum = magnitudeSpectrum;
+function largestPowerOfTwo(length) {
+    if (length < 2)
+        return 0;
+    return 2 ** Math.floor(Math.log2(length));
+}
+const windowCache = new Map();
+function hannWindow(size) {
+    const cached = windowCache.get(size);
+    if (cached)
+        return cached;
+    const window = new Float64Array(size);
+    for (let i = 0; i < size; i += 1) {
+        window[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (size - 1)));
+    }
+    windowCache.set(size, window);
+    return window;
+}
+function fftInPlace(re, im) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i += 1) {
+        let bit = n >> 1;
+        for (; j & bit; bit >>= 1)
+            j ^= bit;
+        j ^= bit;
+        if (i < j) {
+            const tr = re[i];
+            re[i] = re[j];
+            re[j] = tr;
+            const ti = im[i];
+            im[i] = im[j];
+            im[j] = ti;
+        }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+        const angle = (-2 * Math.PI) / len;
+        const wr = Math.cos(angle);
+        const wi = Math.sin(angle);
+        const half = len >> 1;
+        for (let start = 0; start < n; start += len) {
+            let cr = 1;
+            let ci = 0;
+            for (let k = 0; k < half; k += 1) {
+                const a = start + k;
+                const b = a + half;
+                const vr = re[b] * cr - im[b] * ci;
+                const vi = re[b] * ci + im[b] * cr;
+                re[b] = re[a] - vr;
+                im[b] = im[a] - vi;
+                re[a] += vr;
+                im[a] += vi;
+                const nextCr = cr * wr - ci * wi;
+                ci = cr * wi + ci * wr;
+                cr = nextCr;
+            }
+        }
+    }
+}
+function magnitudeSpectrum(samples, size) {
+    const re = new Float64Array(size);
+    const im = new Float64Array(size);
+    const window = hannWindow(size);
+    for (let i = 0; i < size; i += 1) {
+        re[i] = (samples[i] ?? 0) * window[i];
+    }
+    fftInPlace(re, im);
+    const bins = (size >> 1) + 1;
+    const magnitudes = new Float64Array(bins);
+    for (let i = 0; i < bins; i += 1) {
+        magnitudes[i] = Math.hypot(re[i], im[i]);
+    }
+    return magnitudes;
+}
+
+return exports; })();
+__m['flameColour'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.flameColour = flameColour;
+exports.flameColourString = flameColourString;
+const STOPS = [
+    { at: 0 / 6, colour: { r: 148, g: 0, b: 211 } },
+    { at: 1 / 6, colour: { r: 75, g: 0, b: 130 } },
+    { at: 2 / 6, colour: { r: 0, g: 71, b: 255 } },
+    { at: 3 / 6, colour: { r: 0, g: 200, b: 83 } },
+    { at: 4 / 6, colour: { r: 255, g: 235, b: 59 } },
+    { at: 5 / 6, colour: { r: 255, g: 138, b: 0 } },
+    { at: 6 / 6, colour: { r: 230, g: 32, b: 32 } },
+];
+function flameColour(brightness) {
+    const t = clamp01(brightness);
+    for (let i = 1; i < STOPS.length; i += 1) {
+        const upper = STOPS[i];
+        if (t > upper.at)
+            continue;
+        const lower = STOPS[i - 1];
+        const span = upper.at - lower.at;
+        return mix(lower.colour, upper.colour, span > 0 ? (t - lower.at) / span : 0);
+    }
+    return { ...STOPS[STOPS.length - 1].colour };
+}
+function flameColourString(brightness, alpha = 1) {
+    const { r, g, b } = flameColour(brightness);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+function mix(from, to, t) {
+    return {
+        r: Math.round(from.r + (to.r - from.r) * t),
+        g: Math.round(from.g + (to.g - from.g) * t),
+        b: Math.round(from.b + (to.b - from.b) * t),
+    };
+}
+function clamp01(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.min(1, Math.max(0, value));
+}
+
+return exports; })();
+__m['features'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BRIGHT_HZ = exports.DARK_HZ = exports.LOUD_DB = exports.QUIET_DB = exports.SILENCE = void 0;
+exports.rms = rms;
+exports.loudness = loudness;
+exports.spectralCentroid = spectralCentroid;
+exports.brightness = brightness;
+exports.analyse = analyse;
+exports.clamp01 = clamp01;
+const fft_1 = require("./fft");
+exports.SILENCE = { amplitude: 0, brightness: 0 };
+function rms(frames) {
+    const length = frames.length;
+    if (length === 0)
+        return 0;
+    let sum = 0;
+    for (let i = 0; i < length; i += 1)
+        sum += frames[i] * frames[i];
+    return Math.sqrt(sum / length);
+}
+exports.QUIET_DB = -50;
+exports.LOUD_DB = -8;
+function loudness(frames) {
+    const energy = rms(frames);
+    if (energy <= 0)
+        return 0;
+    const db = 20 * Math.log10(energy);
+    return clamp01((db - exports.QUIET_DB) / (exports.LOUD_DB - exports.QUIET_DB));
+}
+function spectralCentroid(frames, sampleRate) {
+    const size = (0, fft_1.largestPowerOfTwo)(frames.length);
+    if (size < 4)
+        return 0;
+    const magnitudes = (0, fft_1.magnitudeSpectrum)(frames, size);
+    let weighted = 0;
+    let total = 0;
+    for (let bin = 1; bin < magnitudes.length; bin += 1) {
+        const magnitude = magnitudes[bin];
+        weighted += ((bin * sampleRate) / size) * magnitude;
+        total += magnitude;
+    }
+    return total > 0 ? weighted / total : 0;
+}
+exports.DARK_HZ = 120;
+exports.BRIGHT_HZ = 6000;
+function brightness(frames, sampleRate) {
+    const centroid = spectralCentroid(frames, sampleRate);
+    if (centroid <= 0)
+        return 0;
+    const span = Math.log2(exports.BRIGHT_HZ) - Math.log2(exports.DARK_HZ);
+    return clamp01((Math.log2(centroid) - Math.log2(exports.DARK_HZ)) / span);
+}
+function analyse(frames, sampleRate) {
+    return {
+        amplitude: loudness(frames),
+        brightness: brightness(frames, sampleRate),
+    };
+}
+function clamp01(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.min(1, Math.max(0, value));
+}
+
+return exports; })();
+__m['envelope'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.COLOUR_RATES = exports.FLAME_RATES = void 0;
+exports.follow = follow;
+exports.FLAME_RATES = { attack: 0.6, release: 0.08 };
+exports.COLOUR_RATES = { attack: 0.2, release: 0.08 };
+function follow(previous, target, rates) {
+    if (!Number.isFinite(target))
+        return previous;
+    const rate = target > previous ? rates.attack : rates.release;
+    return previous + (target - previous) * rate;
+}
+
+return exports; })();
+__m['flameShape'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.flameWidthProfile = flameWidthProfile;
+exports.flameOutline = flameOutline;
+exports.toPathData = toPathData;
+const noise_1 = require("./noise");
+const FOOT = 0.15;
+const FLARE = 0.55;
+const FOOT_DECAY = 6;
+const peakCache = new Map();
+function bodyPeak(tipSharpness) {
+    const cached = peakCache.get(tipSharpness);
+    if (cached)
+        return cached;
+    const at = FLARE / (FLARE + tipSharpness);
+    const value = at ** FLARE * (1 - at) ** tipSharpness;
+    const result = { at, value: value > 0 ? value : 1 };
+    peakCache.set(tipSharpness, result);
+    return result;
+}
+function flameWidthProfile(u, tipSharpness) {
+    if (!Number.isFinite(u) || u < 0 || u > 1)
+        return 0;
+    const peak = bodyPeak(tipSharpness);
+    const body = (u ** FLARE * (1 - u) ** tipSharpness) / peak.value;
+    const foot = FOOT * (1 - u) ** FOOT_DECAY;
+    return body + foot * (1 - body);
+}
+function flameOutline(params) {
+    const { seed, time, centreX, baseY, height, width, sway, flutter, tipSharpness, segments, } = params;
+    const steps = Math.max(3, Math.floor(segments));
+    const left = [];
+    const right = [];
+    for (let i = 0; i <= steps; i += 1) {
+        const u = i / steps;
+        const bend = u ** 1.45;
+        const lean = (0, noise_1.wobble)(seed + 5.7, time * 0.42) * sway * 0.75 * bend;
+        const whip = (0, noise_1.wobble)(seed, time * 1.35 + u * 2.4) * sway * 0.55 * bend;
+        const ripple = (0, noise_1.wobble)(seed + 88.2, time * 2.3 + u * 5.1) * flutter * bend;
+        const x = centreX + lean + whip + ripple;
+        const y = baseY - height * u;
+        const breathe = 0.78 + 0.3 * (0, noise_1.wobble01)(seed + 141.7, time * 1.9 + u * 3.6);
+        const halfWidth = Math.max(0, (width / 2) * flameWidthProfile(u, tipSharpness) * breathe);
+        left.push({ x: x - halfWidth, y });
+        right.push({ x: x + halfWidth, y });
+    }
+    return [...left, ...right.reverse().slice(1)];
+}
+function toPathData(points) {
+    const count = points.length;
+    if (count < 3)
+        return '';
+    const at = (index) => points[((index % count) + count) % count];
+    let path = `M ${round(points[0].x)} ${round(points[0].y)}`;
+    for (let i = 0; i < count; i += 1) {
+        const previous = at(i - 1);
+        const current = at(i);
+        const next = at(i + 1);
+        const following = at(i + 2);
+        const c1 = {
+            x: current.x + (next.x - previous.x) / 6,
+            y: current.y + (next.y - previous.y) / 6,
+        };
+        const c2 = {
+            x: next.x - (following.x - current.x) / 6,
+            y: next.y - (following.y - current.y) / 6,
+        };
+        path += ` C ${round(c1.x)} ${round(c1.y)}, ${round(c2.x)} ${round(c2.y)}, ${round(next.x)} ${round(next.y)}`;
+    }
+    return `${path} Z`;
+}
+function round(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.round(value * 100) / 100;
+}
+
+return exports; })();
+__m['flameDrive'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MAX_REACH = void 0;
+exports.tongueEnergy = tongueEnergy;
+exports.makeTongues = makeTongues;
+exports.tongueSpread = tongueSpread;
+const noise_1 = require("./noise");
+const IDLE = 0.26;
+exports.MAX_REACH = 1.35;
+const KNEE = 0.85;
+function softLimit(value) {
+    if (value <= KNEE)
+        return value;
+    const room = exports.MAX_REACH - KNEE;
+    return KNEE + room * (1 - Math.exp(-(value - KNEE) / room));
+}
+function tongueEnergy(spec, time, level) {
+    const surge = (0, noise_1.wobble01)(spec.seed + 61.3, time * spec.surgeRate);
+    const driven = level * spec.gain * (0.3 + 1.35 * surge);
+    const idle = IDLE * (0.5 + 1.0 * (0, noise_1.wobble01)(spec.seed + 17.9, time * spec.surgeRate * 0.55));
+    return softLimit(idle + driven);
+}
+function makeTongues(count) {
+    const tongues = [];
+    const total = Math.max(1, Math.floor(count));
+    for (let i = 0; i < total; i += 1) {
+        const seed = i * 7.13 + 1;
+        const even = total === 1 ? 0 : (i / (total - 1)) * 2 - 1;
+        const jitter = (0, noise_1.wobble)(seed + 3.1, 0.7) * (0.85 / Math.max(1, total - 1));
+        const centrality = 1 - Math.abs(even) ** 1.4;
+        tongues.push({
+            seed,
+            offset: clamp(even * 0.86 + jitter, -1, 1),
+            restHeight: (0.34 + 0.52 * centrality) * (0.82 + 0.32 * (0, noise_1.wobble01)(seed + 11.7, 2.3)),
+            restWidth: 0.55 + 0.7 * (0, noise_1.wobble01)(seed + 23.9, 1.1),
+            gain: 0.3 + 1.65 * (0, noise_1.wobble01)(seed + 31.3, 3.7),
+            surgeRate: 0.7 + 1.9 * (0, noise_1.wobble01)(seed + 47.1, 5.2),
+            attack: 0.14 + 0.55 * (0, noise_1.wobble01)(seed + 53.9, 1.9),
+            release: 0.03 + 0.09 * (0, noise_1.wobble01)(seed + 67.3, 4.1),
+        });
+    }
+    return tongues;
+}
+function tongueSpread(reach) {
+    if (!Number.isFinite(reach))
+        return 0.72;
+    return 0.72 + 0.34 * Math.min(1.6, Math.max(0, reach));
+}
+function clamp(value, low, high) {
+    if (!Number.isFinite(value))
+        return low;
+    return Math.min(high, Math.max(low, value));
+}
+
+return exports; })();
+__m['flameSettings'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FLAME_SETTING_RANGES = exports.DEFAULT_FLAME_SETTINGS = exports.VIEWPORT = exports.SCENE = void 0;
+exports.clampSetting = clampSetting;
+exports.normaliseSettings = normaliseSettings;
+exports.SCENE = {
+    width: 520,
+    height: 430,
+    baseY: 338,
+};
+exports.VIEWPORT = {
+    x: 80,
+    y: 120,
+    width: 360,
+    height: 290,
+};
+exports.DEFAULT_FLAME_SETTINGS = {
+    tongues: 7,
+    layers: 3,
+    height: 212,
+    width: 22,
+    sway: 30,
+    flutter: 5,
+    tipSharpness: 1.8,
+    segments: 36,
+};
+exports.FLAME_SETTING_RANGES = [
+    { key: 'tongues', label: 'Tongues', min: 3, max: 13, step: 1, decimals: 0 },
+    { key: 'layers', label: 'Glow layers', min: 1, max: 3, step: 1, decimals: 0 },
+    { key: 'height', label: 'Peak height', min: 90, max: exports.SCENE.baseY - 12, step: 2, decimals: 0 },
+    { key: 'width', label: 'Belly width', min: 8, max: 170, step: 2, decimals: 0 },
+    { key: 'sway', label: 'Sway', min: 0, max: 160, step: 2, decimals: 0 },
+    { key: 'flutter', label: 'Flutter', min: 0, max: 34, step: 1, decimals: 0 },
+    { key: 'tipSharpness', label: 'Tip sharpness', min: 0.4, max: 2.6, step: 0.05, decimals: 2 },
+    { key: 'segments', label: 'Segments', min: 5, max: 36, step: 1, decimals: 0 },
+];
+function clampSetting(key, value) {
+    const range = exports.FLAME_SETTING_RANGES.find((entry) => entry.key === key);
+    if (!range)
+        return value;
+    if (!Number.isFinite(value))
+        return exports.DEFAULT_FLAME_SETTINGS[key];
+    const bounded = Math.min(range.max, Math.max(range.min, value));
+    const stepped = Math.round((bounded - range.min) / range.step) * range.step + range.min;
+    const settled = Math.min(range.max, Math.max(range.min, stepped));
+    const factor = 10 ** range.decimals;
+    return Math.round(settled * factor) / factor;
+}
+function normaliseSettings(stored) {
+    const result = { ...exports.DEFAULT_FLAME_SETTINGS };
+    if (!stored || typeof stored !== 'object')
+        return result;
+    for (const range of exports.FLAME_SETTING_RANGES) {
+        const value = stored[range.key];
+        if (typeof value === 'number') {
+            result[range.key] = clampSetting(range.key, value);
+        }
+    }
+    return result;
+}
+
+return exports; })();
+__m['trackAnalysis'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EMPTY_ANALYSIS = void 0;
+exports.percentile = percentile;
+exports.percentileRange = percentileRange;
+exports.buildTrackAnalysis = buildTrackAnalysis;
+exports.sampleAnalysis = sampleAnalysis;
+const features_1 = require("./features");
+exports.EMPTY_ANALYSIS = { hopMs: 40, amplitude: [], brightness: [] };
+const LOW_PERCENTILE = 0.05;
+const HIGH_PERCENTILE = 0.95;
+const MIN_DB_RANGE = 6;
+const MIN_OCTAVE_RANGE = 0.5;
+function percentile(sorted, fraction) {
+    if (sorted.length === 0)
+        return 0;
+    if (sorted.length === 1)
+        return sorted[0];
+    const position = (0, features_1.clamp01)(fraction) * (sorted.length - 1);
+    const lower = Math.floor(position);
+    const upper = Math.ceil(position);
+    if (lower === upper)
+        return sorted[lower];
+    return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+}
+function percentileRange(values) {
+    const usable = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+    if (usable.length === 0)
+        return [0, 0];
+    return [percentile(usable, LOW_PERCENTILE), percentile(usable, HIGH_PERCENTILE)];
+}
+function buildTrackAnalysis(raw) {
+    const frameCount = Math.min(raw.rms.length, raw.centroidHz.length);
+    if (frameCount === 0)
+        return { ...exports.EMPTY_ANALYSIS, hopMs: raw.hopMs || exports.EMPTY_ANALYSIS.hopMs };
+    const decibels = [];
+    const octaves = [];
+    for (let i = 0; i < frameCount; i += 1) {
+        const energy = raw.rms[i];
+        decibels.push(energy > 0 ? 20 * Math.log10(energy) : features_1.QUIET_DB);
+        const hz = raw.centroidHz[i];
+        octaves.push(hz > 0 ? Math.log2(hz) : Math.log2(features_1.DARK_HZ));
+    }
+    const [dbLow, dbHigh] = rangeOrFallback(percentileRange(decibels), MIN_DB_RANGE, [features_1.QUIET_DB, features_1.LOUD_DB]);
+    const [octaveLow, octaveHigh] = rangeOrFallback(percentileRange(octaves), MIN_OCTAVE_RANGE, [Math.log2(features_1.DARK_HZ), Math.log2(features_1.BRIGHT_HZ)]);
+    return {
+        hopMs: raw.hopMs,
+        amplitude: decibels.map((db) => (0, features_1.clamp01)((db - dbLow) / (dbHigh - dbLow))),
+        brightness: octaves.map((oct) => (0, features_1.clamp01)((oct - octaveLow) / (octaveHigh - octaveLow))),
+    };
+}
+function sampleAnalysis(analysis, seconds) {
+    const { amplitude, brightness, hopMs } = analysis;
+    if (amplitude.length === 0)
+        return { amplitude: 0, brightness: 0 };
+    const position = (Math.max(0, seconds) * 1000) / hopMs;
+    const lower = Math.floor(position);
+    if (lower >= amplitude.length - 1) {
+        const last = amplitude.length - 1;
+        return { amplitude: amplitude[last], brightness: brightness[last] };
+    }
+    const t = position - lower;
+    return {
+        amplitude: amplitude[lower] + (amplitude[lower + 1] - amplitude[lower]) * t,
+        brightness: brightness[lower] + (brightness[lower + 1] - brightness[lower]) * t,
+    };
+}
+function rangeOrFallback([low, high], minimumSpan, fallback) {
+    return high - low >= minimumSpan ? [low, high] : fallback;
+}
+
+return exports; })();
+__m['sparks'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SPARK_COUNT = void 0;
+exports.makeSparkStates = makeSparkStates;
+exports.sparkRate = sparkRate;
+exports.sparkPhase = sparkPhase;
+exports.buildSparks = buildSparks;
+const noise_1 = require("./noise");
+exports.SPARK_COUNT = 22;
+function makeSparkStates(count = exports.SPARK_COUNT) {
+    return Array.from({ length: count }, () => ({ cycle: -1, launchEnergy: 0 }));
+}
+function sparkRate(index) {
+    return 0.22 + 0.16 * (index % 5);
+}
+function sparkPhase(index, count = exports.SPARK_COUNT) {
+    return index / count;
+}
+function buildSparks(input) {
+    const { states, time, energy, centreX, baseY, width, height } = input;
+    const count = states.length;
+    const sparks = [];
+    for (let s = 0; s < count; s += 1) {
+        const state = states[s];
+        const raw = time * sparkRate(s) + sparkPhase(s, count);
+        const cycle = Math.floor(raw);
+        const life = raw - cycle;
+        if (cycle !== state.cycle) {
+            state.cycle = cycle;
+            state.launchEnergy = Number.isFinite(energy) ? energy : 0;
+        }
+        const launch = state.launchEnergy;
+        const rise = life ** 0.85;
+        const seed = 40 + s * 3.3;
+        sparks.push({
+            cx: finite(centreX + (0, noise_1.wobble)(seed, time * 0.7 + life * 3) * width * 1.9, centreX),
+            cy: finite(baseY - rise * height * 0.9 * launch, baseY),
+            r: Math.max(0, finite(0.7 + 1.5 * (1 - rise) * launch)),
+            opacity: Math.max(0, finite((1 - rise) * 0.6 * launch)),
+        });
+    }
+    return sparks;
+}
+function finite(value, fallback = 0) {
+    return Number.isFinite(value) ? value : fallback;
+}
+
+return exports; })();
+__m['flameFrame'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EMPTY_FRAME = exports.GLOW_STOPS = exports.HALO_SCALE = void 0;
+exports.safe = safe;
+exports.buildFlameFrame = buildFlameFrame;
+const envelope_1 = require("./envelope");
+const flameColour_1 = require("./flameColour");
+const flameDrive_1 = require("./flameDrive");
+const flameShape_1 = require("./flameShape");
+const flameSettings_1 = require("./flameSettings");
+const sparks_1 = require("./sparks");
+exports.HALO_SCALE = 1.24;
+exports.GLOW_STOPS = [
+    { offset: '0%', weight: 0.44 },
+    { offset: '30%', weight: 0.26 },
+    { offset: '62%', weight: 0.09 },
+    { offset: '100%', weight: 0 },
+];
+exports.EMPTY_FRAME = {
+    paths: [],
+    opacities: [],
+    colour: 'rgb(148, 0, 211)',
+    glowRx: 0,
+    glowRy: 0,
+    glowOpacity: 0,
+    sparks: [],
+    brightness: 0,
+};
+function safe(value, fallback = 0) {
+    return Number.isFinite(value) ? value : fallback;
+}
+function buildFlameFrame(input) {
+    const { settings, tongues, levels, sparkStates, time } = input;
+    const amplitude = safe(input.amplitude);
+    const brightness = (0, envelope_1.follow)(safe(input.previousBrightness), safe(input.brightness), envelope_1.COLOUR_RATES);
+    const colour = (0, flameColour_1.flameColour)(brightness);
+    const colourString = `rgb(${colour.r}, ${colour.g}, ${colour.b})`;
+    const heightUnit = safe(settings.height / (flameDrive_1.MAX_REACH * exports.HALO_SCALE));
+    const paths = [];
+    const opacities = [];
+    for (let i = 0; i < tongues.length; i += 1) {
+        const tongue = tongues[i];
+        levels[i] = safe((0, envelope_1.follow)(safe(levels[i] ?? 0), amplitude, tongue));
+        const reach = safe((0, flameDrive_1.tongueEnergy)(tongue, time, levels[i]));
+        const spread = (0, flameDrive_1.tongueSpread)(reach);
+        for (let layer = 0; layer < settings.layers; layer += 1) {
+            const depth = settings.layers === 1 ? 1 : layer / (settings.layers - 1);
+            const scale = exports.HALO_SCALE - (exports.HALO_SCALE - 1) * depth;
+            paths.push((0, flameShape_1.toPathData)((0, flameShape_1.flameOutline)({
+                seed: tongue.seed + layer * 0.31,
+                time,
+                centreX: flameSettings_1.SCENE.width / 2 + tongue.offset * settings.width * 1.45,
+                baseY: flameSettings_1.SCENE.baseY,
+                height: safe(heightUnit * tongue.restHeight * reach * scale),
+                width: safe(settings.width * tongue.restWidth * spread * scale),
+                sway: safe(settings.sway * (0.45 + 0.75 * Math.min(1.4, reach))),
+                flutter: safe(settings.flutter),
+                tipSharpness: settings.tipSharpness,
+                segments: settings.segments,
+            })));
+            opacities.push(safe(0.16 + 0.42 * depth));
+        }
+    }
+    const energy = 0.18 + 0.82 * amplitude;
+    const glowBreath = 0.72 + 0.5 * energy;
+    const sparks = (0, sparks_1.buildSparks)({
+        states: sparkStates,
+        time,
+        energy,
+        centreX: flameSettings_1.SCENE.width / 2,
+        baseY: flameSettings_1.SCENE.baseY,
+        width: settings.width,
+        height: settings.height,
+    });
+    return {
+        paths,
+        opacities,
+        colour: colourString,
+        glowRx: Math.max(0, safe((130 + settings.width * 2.2) * glowBreath)),
+        glowRy: Math.max(0, safe((64 + settings.height * 0.16) * glowBreath)),
+        glowOpacity: safe(0.34 + 0.86 * amplitude),
+        sparks,
+        brightness,
+    };
+}
+
+return exports; })();
+__m['starField'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.STREAK_SEGMENTS = exports.SHOOTING_DURATION = exports.SHOOTING_PERIOD = exports.SKY_SEED = exports.SKY_DEPTH = exports.TWINKLE_GROUPS = void 0;
+exports.makeStars = makeStars;
+exports.shootingStar = shootingStar;
+exports.isShooting = isShooting;
+exports.TWINKLE_GROUPS = [
+    { period: 3.1, phase: 0.0, low: 0.58 },
+    { period: 4.3, phase: 1.7, low: 0.7 },
+    { period: 2.6, phase: 0.9, low: 0.52 },
+    { period: 5.9, phase: 3.4, low: 0.78 },
+    { period: 3.7, phase: 2.2, low: 0.62 },
+    { period: 6.7, phase: 4.8, low: 0.84 },
+    { period: 2.9, phase: 1.3, low: 0.55 },
+];
+exports.SKY_DEPTH = 0.38;
+exports.SKY_SEED = 20260902;
+exports.SHOOTING_PERIOD = 11;
+exports.SHOOTING_DURATION = 1.1;
+exports.STREAK_SEGMENTS = 7;
+const CROSSINGS = [
+    { x: -0.06, y: 0.07, dir: 1, span: 0.64, drop: 0.14 },
+    { x: 0.94, y: 0.15, dir: -1, span: 0.58, drop: 0.19 },
+    { x: 0.12, y: 0.04, dir: 1, span: 0.47, drop: 0.11 },
+    { x: 1.02, y: 0.09, dir: -1, span: 0.71, drop: 0.16 },
+    { x: -0.02, y: 0.19, dir: 1, span: 0.55, drop: 0.09 },
+    { x: 0.86, y: 0.05, dir: -1, span: 0.5, drop: 0.21 },
+];
+function mulberry32(seed) {
+    let a = seed >>> 0;
+    return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function makeStars(count, width, height, seed = exports.SKY_SEED) {
+    if (!(width > 0) || !(height > 0) || !(count > 0))
+        return [];
+    const random = mulberry32(seed);
+    const stars = [];
+    for (let i = 0; i < count; i += 1) {
+        const depth = random() ** 1.8;
+        stars.push({
+            x: width * random(),
+            y: height * (0.015 + exports.SKY_DEPTH * depth),
+            r: 0.4 + 0.9 * random() ** 2,
+            opacity: (0.42 + 0.58 * random()) * (1 - 0.42 * depth),
+            group: Math.floor(random() * exports.TWINKLE_GROUPS.length) % exports.TWINKLE_GROUPS.length,
+        });
+    }
+    return stars;
+}
+function shootingStar(time, width, height) {
+    if (!Number.isFinite(time) || !(width > 0) || !(height > 0))
+        return [];
+    const cycle = Math.floor(time / exports.SHOOTING_PERIOD);
+    const elapsed = time - cycle * exports.SHOOTING_PERIOD;
+    if (elapsed > exports.SHOOTING_DURATION)
+        return [];
+    const crossing = CROSSINGS[((cycle % CROSSINGS.length) + CROSSINGS.length) % CROSSINGS.length];
+    const progress = elapsed / exports.SHOOTING_DURATION;
+    const span = width * crossing.span;
+    const drop = height * crossing.drop;
+    const headX = width * crossing.x + crossing.dir * span * progress;
+    const headY = height * crossing.y + drop * progress;
+    const envelope = Math.sin(Math.PI * progress);
+    const tailLength = width * 0.16;
+    const slope = drop / (span || 1);
+    const segments = [];
+    for (let i = 0; i < exports.STREAK_SEGMENTS; i += 1) {
+        const near = i / exports.STREAK_SEGMENTS;
+        const far = (i + 1) / exports.STREAK_SEGMENTS;
+        segments.push({
+            x1: headX - crossing.dir * tailLength * near,
+            y1: headY - tailLength * near * slope,
+            x2: headX - crossing.dir * tailLength * far,
+            y2: headY - tailLength * far * slope,
+            opacity: Math.max(0, envelope * 0.85 * (1 - near) ** 1.6),
+            width: Math.max(0.3, 1.7 * (1 - near)),
+        });
+    }
+    return segments;
+}
+function isShooting(time) {
+    if (!Number.isFinite(time))
+        return false;
+    return time - Math.floor(time / exports.SHOOTING_PERIOD) * exports.SHOOTING_PERIOD <= exports.SHOOTING_DURATION;
+}
+
+return exports; })();
+var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField']);
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = RATIO;
+
+  /**
+   * The alphas to test.
+   *
+   * Chosen to include every value the visualiser actually uses — the glow's three gradient
+   * stops at 0.09, 0.26 and 0.44, and the layer ramp's 0.16, 0.37 and 0.58 — with probes
+   * below them, because the interesting question is how far under 0.16 a panel still shows
+   * anything at all.
+   */
+  var ALPHAS = [0.02, 0.04, 0.06, 0.09, 0.12, 0.16, 0.26, 0.37, 0.44, 0.58];
+
+  /** Where each of those appears in the fire, for the column captions. */
+  var USED = {
+    0.09: 'glow out',
+    0.16: 'halo',
+    0.26: 'glow mid',
+    0.37: 'mid',
+    0.44: 'glow in',
+    0.58: 'core'
+  };
+
+  var NAMES = ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red'];
+  var BG = { r: 11, g: 11, b: 16 };
+
+  /** What a translucent colour actually becomes over the app's background. */
+  function over(colour, alpha) {
+    return 'rgb(' +
+      Math.round(colour.r * alpha + BG.r * (1 - alpha)) + ', ' +
+      Math.round(colour.g * alpha + BG.g * (1 - alpha)) + ', ' +
+      Math.round(colour.b * alpha + BG.b * (1 - alpha)) + ')';
+  }
+
+  function headRow() {
+    var row = document.createElement('div');
+    row.className = 'row heads';
+    row.appendChild(document.createElement('div')).className = 'rowlabel';
+
+    ALPHAS.forEach(function (alpha, index) {
+      var cell = document.createElement('div');
+      cell.className = 'cell' + (USED[alpha] ? ' used' : '');
+      cell.innerHTML = '<b>' + (index + 1) + '</b><span>' + (USED[alpha] || alpha.toFixed(2)) + '</span>';
+      row.appendChild(cell);
+    });
+
+    return row;
+  }
+
+  function buildGrid(target, rows) {
+    var grid = document.getElementById(target);
+    grid.style.setProperty('--cols', ALPHAS.length);
+    grid.appendChild(headRow());
+
+    rows.forEach(function (entry) {
+      var row = document.createElement('div');
+      row.className = 'row';
+
+      var label = document.createElement('div');
+      label.className = 'rowlabel';
+      label.textContent = entry.name;
+      row.appendChild(label);
+
+      ALPHAS.forEach(function (alpha) {
+        var cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.background = over(entry.colour, alpha);
+        row.appendChild(cell);
+      });
+
+      grid.appendChild(row);
+    });
+  }
+
+  // The real ramp, read from the module rather than copied.
+  buildGrid('layers', NAMES.map(function (name, index) {
+    return { name: name, colour: S.flameColour(index / (NAMES.length - 1)) };
+  }));
+
+  buildGrid('white', [
+    { name: 'white', colour: { r: 255, g: 255, b: 255 } },
+    { name: 'grey', colour: { r: 160, g: 160, b: 170 } }
+  ]);
+
+  /**
+   * The glow as it is actually drawn: the shared stop table, at the two ends of the range
+   * `glowOpacity` covers — 0.34 in silence up to about 1.2 at full loudness.
+   */
+  [0.34, 0.6, 0.9, 1.2].forEach(function (glowOpacity, index) {
+    var colour = S.flameColour(0.15);
+    var id = 'sw' + index;
+
+    var figure = document.createElement('figure');
+    figure.innerHTML =
+      '<svg viewBox="0 0 200 92" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><radialGradient id="' + id + '">' +
+          S.GLOW_STOPS.map(function (stop) {
+            return '<stop offset="' + stop.offset +
+              '" stop-color="rgb(' + colour.r + ',' + colour.g + ',' + colour.b + ')"' +
+              ' stop-opacity="' + (stop.weight * glowOpacity) + '"/>';
+          }).join('') +
+        '</radialGradient></defs>' +
+        '<rect width="200" height="92" fill="#0B0B10"/>' +
+        '<ellipse cx="100" cy="52" rx="92" ry="40" fill="url(#' + id + ')"/>' +
+      '</svg>' +
+      '<figcaption>glowOpacity ' + glowOpacity.toFixed(2) +
+        (index === 0 ? ' — silence' : index === 3 ? ' — loudest' : '') + '</figcaption>';
+
+    document.getElementById('glow').appendChild(figure);
+  });
+
+  var toggle = document.getElementById('toggle');
+  toggle.addEventListener('click', function () {
+    var hidden = document.getElementById('page').classList.toggle('labels-off');
+    toggle.textContent = hidden ? 'Show labels' : 'Hide labels';
+    toggle.setAttribute('aria-pressed', String(hidden));
+  });
+})();
+</script>

@@ -1,0 +1,882 @@
+<title>Ratio on a Pixel 6 Pro</title>
+
+<!--
+  Required for the phone layout to engage when this page is served directly.
+
+  Without it a mobile browser lays the page out at about 980px and zooms out to fit, so the
+  narrow-width media query never matches and the whole thing arrives as a shrunken desktop
+  view — which also makes the phone mock the wrong size, defeating the point of it. Hosted
+  artifacts get this tag from their own wrapper; a file served from disk does not.
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Roboto:wght@400;500;700&display=swap">
+
+<style>
+  /* ------------------------------------------------------------------ tokens
+     Two palettes. The workbench follows the viewer's theme; the phone screen
+     never does — it is the app, and the app is dark. Those tokens are copied
+     from src/theme/colors.ts and must not drift. */
+  :root {
+    --ground: #F4F3F7;
+    --panel: #FFFFFF;
+    --ink: #1B1A22;
+    --muted: #6C6A7A;
+    --faint: #9694A4;
+    --line: #E4E2EB;
+    --accent: #6A45FF;
+    --accent-wash: rgba(106, 69, 255, 0.09);
+    --shadow: 0 24px 60px -20px rgba(27, 26, 34, 0.34);
+
+    /* Ratio's own tokens. Fixed in both themes. */
+    --app-bg: #0B0B10;
+    --app-surface: #15151D;
+    --app-text: #F2F2F7;
+    --app-muted: #9A9AAB;
+    --app-faint: #6B6B7B;
+    --app-accent: #7C5CFF;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131218;
+      --panel: #1C1A24;
+      --ink: #ECEBF2;
+      --muted: #9B98A8;
+      --faint: #74717F;
+      --line: #2B2934;
+      --accent: #9B82FF;
+      --accent-wash: rgba(155, 130, 255, 0.14);
+      --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131218;
+    --panel: #1C1A24;
+    --ink: #ECEBF2;
+    --muted: #9B98A8;
+    --faint: #74717F;
+    --line: #2B2934;
+    --accent: #9B82FF;
+    --accent-wash: rgba(155, 130, 255, 0.14);
+    --shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+
+  /* ------------------------------------------------------------------- page */
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+
+  /* On a phone the mock is the point.
+     It takes the full width at true scale, sits at the very top with nothing above it, and
+     everything else — the description, the dials, the readout — is below the fold. Page
+     padding goes to zero so the 412dp screen is not squeezed into 412 minus margins. */
+  @media (max-width: 880px) {
+    .shell {
+      display: flex;
+      flex-direction: column;
+      grid-template-columns: none;
+      padding: 0 0 48px;
+      gap: 22px;
+    }
+
+    /* Lets the phone, readout and caption order themselves against the rest of the page. */
+    .viewer { display: contents; }
+
+    .phone-scaler { order: 1; align-self: center; }
+    header.masthead { order: 2; padding: 0 14px 16px; margin: 0 14px; }
+    .rail { order: 3; padding: 0 14px; }
+    .readout { order: 4; align-self: center; width: calc(100% - 28px); }
+    .caption { order: 5; padding: 0 14px; }
+
+    /* Square off the top corners: at full bleed a rounded card reads as a floating widget,
+       and the point is to look at a screen. */
+    .phone { border-radius: 0; box-shadow: none; }
+  }
+
+  header.masthead {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .device-tag {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    background: var(--accent-wash);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .masthead p {
+    margin: 0;
+    flex: 1 1 320px;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ------------------------------------------------------------------ rail */
+  .rail { display: flex; flex-direction: column; gap: 18px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card h2 {
+    margin: 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  button {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 11px;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+
+  button:hover { background: var(--accent-wash); border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+
+  .field { display: grid; gap: 5px; }
+
+  .field-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .field-head b { font-weight: 500; }
+
+  .field-head span {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    margin: 0;
+    /* Vertical drags scroll the page and leave the value alone; only a sideways drag moves
+       it. Without this, scrolling past a slider on a phone silently changes its value. */
+    touch-action: pan-y;
+  }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .hint {
+    margin: 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: var(--faint);
+  }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .check input { accent-color: var(--accent); margin: 0; }
+
+  /* ----------------------------------------------------------------- stage */
+  .viewer { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  /* 412x892dp is the Pixel 6 Pro's logical screen: 1440x3120 at 3.5x. Scaled
+     to fit the browser, never resized — the dp grid inside must stay exact. */
+  .phone-scaler { transform-origin: top center; }
+
+  .phone {
+    width: 412px;
+    height: 892px;
+    background: var(--app-bg);
+    border-radius: 30px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: Roboto, system-ui, sans-serif;
+    color: var(--app-text);
+  }
+
+  /* No violet wash here. The player paints one behind the artwork for depth, but skips it
+     under the visualiser — a night sky wants a flat black ground. */
+
+  .inset-top { height: 48px; flex: none; }
+
+  .topbar {
+    flex: none;
+    height: 50px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar .album {
+    font-size: 13px;
+    color: var(--app-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .glyph { width: 26px; height: 26px; flex: none; color: var(--app-text); }
+  .glyph.dim { color: var(--app-muted); }
+  .glyph.on { color: var(--app-accent); }
+
+  .stage { flex: 1 1 auto; position: relative; min-height: 0; width: 100%; }
+  .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Drawn on request: shows where the letterboxed fire ends and the band the
+     starfield exists to fill begins. */
+  .band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    border-bottom: 1px dashed rgba(124, 92, 255, 0.75);
+    pointer-events: none;
+    display: none;
+  }
+
+  .band span {
+    position: absolute;
+    right: 8px;
+    bottom: 4px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+    color: rgba(190, 175, 255, 0.95);
+  }
+
+  .showband .band { display: block; }
+
+  .tune {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 17px;
+    background: var(--app-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--app-muted);
+  }
+
+  .bottom { flex: none; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+  .inset-bottom { height: 40px; flex: none; }
+
+  .details { display: flex; align-items: center; gap: 12px; }
+  .details .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .details .title { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .details .artist { font-size: 13px; color: var(--app-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .seek { display: flex; flex-direction: column; gap: 4px; }
+  .seek .hit { height: 28px; display: flex; align-items: center; }
+  .seek .track { height: 4px; width: 100%; border-radius: 2px; background: #2A2A36; position: relative; }
+  .seek .fill { position: absolute; inset: 0 auto 0 0; width: 38%; border-radius: 2px; background: var(--app-accent); }
+  .seek .thumb { position: absolute; left: 38%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 7px; background: var(--app-text); }
+  .seek .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--app-faint); font-variant-numeric: tabular-nums; }
+
+  .transport { height: 66px; display: flex; align-items: center; justify-content: space-between; }
+  .transport .play { width: 66px; height: 66px; border-radius: 33px; background: var(--app-accent); display: flex; align-items: center; justify-content: center; }
+
+  /* --------------------------------------------------------------- readout */
+  .readout {
+    width: 100%;
+    max-width: 640px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+    overflow-x: auto;
+  }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+
+  th { font-weight: 500; color: var(--muted); }
+
+  td {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  td.note { text-align: left; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; white-space: normal; }
+
+  .caption { max-width: 640px; color: var(--muted); font-size: 12.5px; margin: 0; }
+  .caption code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px; color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none; }
+  }
+</style>
+
+<div class="shell">
+  <header class="masthead">
+    <h1>Ratio on a Pixel 6 Pro</h1>
+    <span class="device-tag">412 × 892 dp · 1440 × 3120 @ 3.5×</span>
+    <p>
+      Opacities are exactly as they are on your phone. Pin a colour to hold it against the
+      device, then raise vividness: it adds light without touching hue or saturation, which
+      is the part of raising screen brightness the drawing can actually reproduce.
+    </p>
+  </header>
+
+  <div class="rail">
+    <section class="card">
+      <h2>Vividness</h2>
+      <div class="field">
+        <div class="field-head"><b>Toward full value</b><span id="vividOut">0.00</span></div>
+        <input type="range" id="vivid" min="0" max="100" step="1" value="0" aria-label="Vividness">
+      </div>
+      <p class="hint" id="vividHint"></p>
+      <p class="hint">
+        Scales each colour until its brightest channel reaches 255. Hue and saturation are
+        untouched &mdash; only light is added. 0.00 is the build on your phone.
+      </p>
+    </section>
+    <section class="card">
+      <h2>Colour</h2>
+      <div class="field">
+        <div class="field-head"><b>Ramp position</b><span id="colourOut">0.50</span></div>
+        <input type="range" id="colour" min="0" max="100" step="1" value="50" aria-label="Colour ramp position">
+      </div>
+      <div class="buttons">
+        <button id="sweep" aria-pressed="false">Pinned</button>
+      </div>
+      <p class="hint" id="colourHint"></p>
+      <p class="hint">
+        Held still by default so it can be compared against the phone. Loudness keeps
+        beating underneath, so the fire still moves. Press Pinned to let it drift.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="viewer">
+    <div class="phone-scaler" id="scaler">
+      <div class="phone" id="phone">
+        <div class="inset-top"></div>
+
+        <div class="topbar">
+          <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          <div class="album">Nocturnes, Op. 9</div>
+          <svg class="glyph on" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c1 3-1 4-1 6 0 1 1 2 2 2s2-1 2-3c2 2 3 4 3 7a6 6 0 0 1-12 0c0-4 3-7 6-12z"/></svg>
+          <svg class="glyph dim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </div>
+
+        <div class="stage" id="stage">
+          <svg id="sky" aria-hidden="true"></svg>
+          <svg id="fire" aria-hidden="true"></svg>
+          <div class="band" id="bandMark"><span id="bandLabel"></span></div>
+          <div class="tune">
+            <svg class="glyph" style="width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+          </div>
+        </div>
+
+        <div class="bottom">
+          <div class="details">
+            <div class="text">
+              <div class="title">Nocturne in E-flat</div>
+              <div class="artist">Frédéric Chopin</div>
+            </div>
+            <svg class="glyph dim" style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-7-4.5-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 12c0 4.5-7 9-7 9z"/></svg>
+            <svg class="glyph dim" style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          </div>
+
+          <div class="seek">
+            <div class="hit"><div class="track"><div class="fill"></div><div class="thumb"></div></div></div>
+            <div class="times"><span>2:14</span><span>5:51</span></div>
+          </div>
+
+          <div class="transport">
+            <svg class="glyph dim" style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+            <svg class="glyph" style="width:30px;height:30px" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+            <div class="play"><svg style="width:30px;height:30px;color:#fff" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg></div>
+            <svg class="glyph" style="width:30px;height:30px" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z"/></svg>
+            <svg class="glyph dim" style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+        </div>
+
+        <div class="inset-bottom"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/*__RATIO_BUNDLE__*/
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = RATIO;
+  var SCENE = S.SCENE;
+  var VIEWPORT = S.VIEWPORT;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // Matches components/Bonfire.tsx. Repeated rather than imported because the logs are
+  // presentation, not maths, and live in the component.
+  var LOGS = [
+    { x: -62, y: -3, w: 124, h: 9, rotate: -9, fill: '#33200F' },
+    { x: -26, y: 5, w: 107, h: 8, rotate: 8, fill: '#28190C' },
+    { x: -75, y: 8, w: 88, h: 8, rotate: 4, fill: '#3A2513' },
+    { x: -42, y: 15, w: 95, h: 7, rotate: -3, fill: '#221408' }
+  ];
+
+  var el = function (id) { return document.getElementById(id); };
+
+  /**
+   * Writes to a readout if it is still on the page.
+   *
+   * Not defensive for its own sake. `measure()` runs before the frame is built, so a missing
+   * element there threw on every single frame and the fire simply never drew — the wood and
+   * the stars stayed up because they are painted once, which made it look like a rendering
+   * problem rather than a dead loop.
+   */
+  var setText = function (id, text) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = text;
+  };
+
+  /**
+   * The twinkle keyframes, written once from the same table the app uses.
+   *
+   * Generated rather than hand-written so the preview cannot drift from `TWINKLE_GROUPS`,
+   * and injected once — this is not per-frame work, it is a stylesheet.
+   */
+  (function installTwinkle() {
+    var css = ['.tw { animation-iteration-count: infinite; animation-timing-function: ease-in-out; }'];
+    RATIO.TWINKLE_GROUPS.forEach(function (group, index) {
+      css.push('.tw' + index + ' { animation-name: tw' + index + '; }');
+      css.push(
+        '@keyframes tw' + index + ' { 0%, 100% { opacity: ' + group.low + '; } 50% { opacity: 1; } }'
+      );
+    });
+    css.push('@media (prefers-reduced-motion: reduce) { .tw { animation: none; opacity: 0.85; } }');
+
+    var style = document.createElement('style');
+    style.textContent = css.join(' ');
+    document.head.appendChild(style);
+  })();
+  var svgEl = function (name, attrs) {
+    var node = document.createElementNS(NS, name);
+    for (var key in attrs) if (attrs[key] !== undefined && attrs[key] !== null) {
+      node.setAttribute(key, attrs[key]);
+    }
+    return node;
+  };
+
+  /* ------------------------------------------------------------------ state */
+  var settings = Object.assign({}, S.DEFAULT_FLAME_SETTINGS);
+  var tongues = S.makeTongues(settings.tongues);
+  var levels = tongues.map(function () { return 0; });
+  var sparkStates = S.makeSparkStates();
+  var previousBrightness = 0;
+
+  var running = true;
+  var clock = 0;
+  var skyClock = S.SHOOTING_DURATION + 2;
+  var ampOverride = null;
+  var brightOverride = 0.5;
+  var cutAt = null;
+  var DENSITY = 5.2;
+
+  // The dials, starting at the previous build's values. The middle layer is interpolated
+  // between halo and core, so these two cover the whole layer ramp.
+  var vivid = 0;
+  var stars = [];
+  var skySize = { width: 0, height: 0 };
+
+  /* ------------------------------------------------------------------- fire */
+  var fire = el('fire');
+  fire.setAttribute('viewBox', VIEWPORT.x + ' ' + VIEWPORT.y + ' ' + VIEWPORT.width + ' ' + VIEWPORT.height);
+  fire.setAttribute('preserveAspectRatio', 'xMidYMax meet');
+
+  var defs = svgEl('defs');
+  var grad = svgEl('radialGradient', { id: 'flameGlowPreview' });
+  // The same table the component uses, so the preview cannot drift from the app.
+  var stops = S.GLOW_STOPS.map(function (entry) {
+    var stop = svgEl('stop', { offset: entry.offset });
+    stop.dataset.weight = entry.weight;
+    grad.appendChild(stop);
+    return stop;
+  });
+  defs.appendChild(grad);
+  fire.appendChild(defs);
+
+  var logGroup = svgEl('g');
+  LOGS.forEach(function (log) {
+    var cx = SCENE.width / 2 + log.x + log.w / 2;
+    var cy = SCENE.baseY + log.y + log.h / 2;
+    logGroup.appendChild(svgEl('rect', {
+      x: SCENE.width / 2 + log.x, y: SCENE.baseY + log.y,
+      width: log.w, height: log.h, rx: log.h / 2, fill: log.fill,
+      transform: 'rotate(' + log.rotate + ' ' + cx + ' ' + cy + ')'
+    }));
+  });
+  fire.appendChild(logGroup);
+
+  var glow = svgEl('ellipse', {
+    cx: SCENE.width / 2, cy: SCENE.baseY + 14, fill: 'url(#flameGlowPreview)'
+  });
+  fire.appendChild(glow);
+
+  var pathGroup = svgEl('g');
+  var sparkGroup = svgEl('g');
+  fire.appendChild(pathGroup);
+  fire.appendChild(sparkGroup);
+
+  var pathNodes = [];
+  var sparkNodes = [];
+
+  /* -------------------------------------------------------------------- sky */
+  var sky = el('sky');
+  var streakGroup = svgEl('g');
+
+
+  function buildSky(width, height) {
+    while (sky.firstChild) sky.removeChild(sky.firstChild);
+    skySize = { width: width, height: height };
+    sky.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+    // Same density rule as components/Starfield.tsx, unless overridden below.
+    var count = Math.min(180, Math.round((width * height * DENSITY) / 10000));
+    stars = S.makeStars(count, width, height);
+
+    // One <g> per twinkle group, animated by CSS keyframes. Each star's own brightness is
+    // baked in and never touched again; the blink belongs to its group and runs on the
+    // compositor, so nothing here is recomputed once the sky is built.
+    var groups = S.TWINKLE_GROUPS.map(function (group, index) {
+      var g = svgEl('g', { class: 'tw tw' + index });
+      g.style.animationDuration = group.period + 's';
+      g.style.animationDelay = '-' + group.phase + 's';
+      sky.appendChild(g);
+      return g;
+    });
+
+    stars.forEach(function (star) {
+      groups[star.group].appendChild(svgEl('circle', {
+        cx: star.x, cy: star.y, r: star.r, fill: '#FFFFFF', 'fill-opacity': star.opacity
+      }));
+    });
+
+    sky.appendChild(streakGroup);
+    setText('rStars', stars.length + ' stars');
+  }
+
+  /* ----------------------------------------------------------------- layout */
+  function measure() {
+    var stage = el('stage');
+    var width = stage.clientWidth;
+    var height = stage.clientHeight;
+    if (width < 1 || height < 1) return;
+
+    if (width !== skySize.width || height !== skySize.height) buildSky(width, height);
+
+    var scaleX = width / VIEWPORT.width;
+    var scaleY = height / VIEWPORT.height;
+    var scale = Math.min(scaleX, scaleY);
+    var binds = scaleX < scaleY ? 'width' : 'height';
+    var drawnH = VIEWPORT.height * scale;
+    var band = height - drawnH;
+
+    setText('rStage', width + ' × ' + height + ' dp');
+    setText('rViewBox', VIEWPORT.width + ' × ' + VIEWPORT.height + ' units');
+    setText('rScale', scale.toFixed(3) + '× (' + binds + ' binds)');
+    setText('rDrawn', Math.round(VIEWPORT.width * scale) + ' × ' + Math.round(drawnH) + ' dp');
+    setText('rBand', Math.round(band) + ' dp (' + Math.round((band / height) * 100) + '% of the stage)');
+
+    var mark = el('bandMark');
+    mark.style.height = band + 'px';
+    setText('bandLabel', Math.round(band) + 'dp of sky');
+  }
+
+  /**
+   * The phone is a fixed dp grid; only the whole thing scales to fit the window.
+   *
+   * On a narrow screen — which is to say, on an actual phone — it is scaled to the width and
+   * allowed to run past the fold instead of being shrunk to fit the height. A Pixel-class
+   * browser viewport is about 412dp wide, so that lands at roughly 1:1 and the fire is being
+   * judged at the size it will really be. Shrinking it to fit would defeat the purpose.
+   */
+  function fitPhone() {
+    var scaler = el('scaler');
+    var narrow = window.innerWidth < 900;
+    // True scale on a phone: the viewport is measured directly, because the page padding is
+    // removed at this width precisely so nothing eats into the 412dp.
+    var scale = narrow
+      ? Math.min(1, window.innerWidth / 412)
+      : Math.min(
+          1,
+          Math.max(320, window.innerHeight - 260) / 892,
+          scaler.parentElement.clientWidth / 412,
+        );
+
+    scaler.style.transform = 'scale(' + scale + ')';
+    scaler.style.height = 892 * scale + 'px';
+    scaler.style.width = 412 * scale + 'px';
+  }
+
+  /* ------------------------------------------------------------------ drive */
+  function loudness(t) {
+    if (cutAt !== null && t >= cutAt) return 0;
+    if (ampOverride !== null) return ampOverride;
+    // A four-beat bar with a stronger downbeat, so the fire has something to answer.
+    var beat = (t * 2) % 4;
+    var hit = Math.exp(-4 * (beat % 1));
+    var accent = beat < 1 ? 1 : 0.62;
+    return Math.min(1, 0.18 + 0.82 * hit * accent);
+  }
+
+  function timbre(t) {
+    if (brightOverride !== null) return brightOverride;
+    return 0.5 + 0.5 * Math.sin(t * 0.21);
+  }
+
+  /* ------------------------------------------------------------------- loop */
+  var lastFrame = 0;
+  var wasShooting = false;
+  var fpsAt = 0;
+  var frames = 0;
+
+  function draw(now) {
+    requestAnimationFrame(draw);
+
+    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0.016;
+    lastFrame = now;
+    if (running) { clock += dt; skyClock += dt; }
+
+    measure();
+
+    var frame = S.buildFlameFrame({
+      settings: settings,
+      tongues: tongues,
+      levels: levels,
+      sparkStates: sparkStates,
+      amplitude: loudness(clock),
+      brightness: timbre(clock),
+      previousBrightness: previousBrightness,
+      time: clock
+    });
+    previousBrightness = frame.brightness;
+
+    // Guarded exactly as the component is: a zero-radius shape under a radial gradient is a
+    // native crash on Android, and the same shape simply vanishes here.
+    // Scale the colour's channels, which is the same lever `flameColour` pulls: hue and
+    // saturation hold, value moves.
+    // A pure value lift: every channel scaled by the same factor, so hue and saturation are
+    // arithmetically unchanged — HSV saturation is (max - min) / max, and a common scale
+    // cancels out of it. Nothing is clamped, which is what kept the earlier multiplier from
+    // being this: clamping caps channels one at a time and walks the colour toward white.
+    var rgb = frame.colour.match(/\d+/g).map(Number);
+    var shown = frame.colour;
+    if (vivid > 0) {
+      var peak = Math.max(rgb[0], rgb[1], rgb[2]);
+      if (peak > 0) {
+        var k = 1 + vivid * (255 / peak - 1);
+        shown = 'rgb(' + rgb.map(function (c) { return Math.round(c * k); }).join(', ') + ')';
+      }
+    }
+
+    var visible = frame.glowRx > 0 && frame.glowRy > 0;
+    glow.style.display = visible ? '' : 'none';
+    if (visible) {
+      glow.setAttribute('rx', frame.glowRx);
+      glow.setAttribute('ry', frame.glowRy);
+      stops.forEach(function (stop) {
+        stop.setAttribute('stop-color', shown);
+        stop.setAttribute('stop-opacity', Number(stop.dataset.weight) * frame.glowOpacity);
+      });
+    }
+
+    while (pathNodes.length < frame.paths.length) {
+      var p = svgEl('path'); pathGroup.appendChild(p); pathNodes.push(p);
+    }
+    pathNodes.forEach(function (node, i) {
+      if (i < frame.paths.length) {
+        node.setAttribute('d', frame.paths[i]);
+        node.setAttribute('fill', shown);
+        node.setAttribute('fill-opacity', frame.opacities[i]);
+        node.style.display = '';
+      } else {
+        node.style.display = 'none';
+      }
+    });
+
+    while (sparkNodes.length < frame.sparks.length) {
+      var c = svgEl('circle'); sparkGroup.appendChild(c); sparkNodes.push(c);
+    }
+    sparkNodes.forEach(function (node, i) {
+      var spark = frame.sparks[i];
+      if (!spark) { node.style.display = 'none'; return; }
+      node.style.display = '';
+      node.setAttribute('cx', spark.cx);
+      node.setAttribute('cy', spark.cy);
+      node.setAttribute('r', spark.r);
+      node.setAttribute('fill', shown);
+      node.setAttribute('fill-opacity', spark.opacity);
+    });
+
+    // The stars are static, so the only sky work is the shooting star — and only while one
+    // is actually crossing, which is about a tenth of the time. Same rule as Starfield.tsx.
+    if (S.isShooting(skyClock)) {
+      wasShooting = true;
+      while (streakGroup.firstChild) streakGroup.removeChild(streakGroup.firstChild);
+      S.shootingStar(skyClock, skySize.width, skySize.height).forEach(function (streak) {
+        streakGroup.appendChild(svgEl('line', {
+          x1: streak.x1, y1: streak.y1, x2: streak.x2, y2: streak.y2,
+          stroke: '#FFFFFF', 'stroke-opacity': streak.opacity,
+          'stroke-width': streak.width, 'stroke-linecap': 'round'
+        }));
+      });
+    } else if (wasShooting) {
+      wasShooting = false;
+      while (streakGroup.firstChild) streakGroup.removeChild(streakGroup.firstChild);
+    }
+
+    frames += 1;
+    if (now - fpsAt > 500) {
+      setText('rFps', Math.round((frames * 1000) / (now - fpsAt)) + ' fps');
+      fpsAt = now; frames = 0;
+    }
+  }
+
+  /* --------------------------------------------------------------- controls */
+
+
+
+
+
+
+
+
+  (function bindColour() {
+    var slider = el('colour');
+    var button = el('sweep');
+    var NAMES = ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red'];
+
+    var show = function () {
+      var pinned = brightOverride !== null;
+      var t = Number(slider.value) / 100;
+      var colour = S.flameColour(t);
+
+      setText('colourOut', pinned ? t.toFixed(2) : 'sweeping');
+      setText(
+        'colourHint',
+        NAMES[Math.round(t * (NAMES.length - 1))] +
+          ' - rgb(' + colour.r + ', ' + colour.g + ', ' + colour.b + ')',
+      );
+
+      button.textContent = pinned ? 'Pinned' : 'Sweeping';
+      button.setAttribute('aria-pressed', String(!pinned));
+    };
+
+    // This is the line that actually recolours the fire; without it the readouts move and
+    // nothing else does.
+    slider.addEventListener('input', function () {
+      brightOverride = Number(slider.value) / 100;
+      show();
+    });
+
+    button.addEventListener('click', function () {
+      brightOverride = brightOverride === null ? Number(slider.value) / 100 : null;
+      show();
+    });
+
+    show();
+  })();
+
+  (function bindVivid() {
+    var input = el('vivid');
+    var update = function () {
+      vivid = Number(input.value) / 100;
+      setText('vividOut', vivid.toFixed(2));
+
+      // Shown on whatever colour is pinned, so the number means something specific.
+      var t = Number(el('colour').value) / 100;
+      var c = S.flameColour(t);
+      var peak = Math.max(c.r, c.g, c.b);
+      var k = 1 + vivid * (255 / peak - 1);
+      setText(
+        'vividHint',
+        'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ') -> rgb(' +
+          [c.r, c.g, c.b].map(function (x) { return Math.round(x * k); }).join(', ') + ')',
+      );
+    };
+    input.addEventListener('input', update);
+    el('colour').addEventListener('input', update);
+    update();
+  })();
+
+  window.addEventListener('resize', fitPhone);
+  fitPhone();
+  requestAnimationFrame(draw);
+})();
+</script>
