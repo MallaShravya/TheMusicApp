@@ -1,0 +1,535 @@
+<title>Notes or a Line</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* One dark instrument panel, committed to deliberately: the only bright thing should be
+     the pitch line being compared. Every colour written out so it holds on either ground. */
+  :root {
+    --ground: #0E0E14;
+    --panel: #171720;
+    --line: #262633;
+    --ink: #ECEBF2;
+    --muted: #9895A6;
+    --faint: #6A6878;
+    --accent: #7C5CFF;
+    --accent-dim: rgba(124, 92, 255, 0.16);
+    --warn: #E4A11B;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 26px 18px 72px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 20px; }
+  h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 62ch; }
+
+  h2 {
+    margin: 24px 0 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    resize: vertical;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 14px; }
+
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 11px; color: var(--muted); }
+
+  input[type="number"] {
+    font: inherit;
+    font-size: 13px;
+    width: 84px;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  button {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 15px;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: var(--accent); background: var(--accent-dim); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .presets button { font-size: 12px; padding: 6px 10px; }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 190px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .hint { margin: 8px 0 0; color: var(--faint); font-size: 11.5px; font-family: 'IBM Plex Mono', monospace; }
+  .note { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; max-width: 62ch; }
+  .errors { margin-top: 8px; color: var(--warn); font-size: 12.5px; }
+
+  .legend { display: grid; gap: 3px; color: var(--muted); font-size: 12.5px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .legend code {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+</style>
+
+<div class="page">
+  <header>
+    <h1>Notes or a Line</h1>
+    <p>
+      The same phrase three ways: as separate notes, as notes that overlap, and as one
+      unbroken pitch line that never stops moving. The question is whether the third is still
+      heard as a tune, or only as a siren that happens to pass through the right pitches.
+    </p>
+  </header>
+
+  <h2>Phrase</h2>
+  <textarea id="text" spellcheck="false" aria-label="Sargam phrase">S S P P D D P - | M M G G R R S -</textarea>
+
+  <div class="presets">
+    <button id="p1" data-phrase="S S P P D D P - | M M G G R R S -">Twinkle</button>
+    <button id="p2" data-phrase=".N S R | M R - | P M R S">Sarang pakad</button>
+    <button id="p3" data-phrase="S R G M P D N S' - | S' N D P M G R S -">Scale, up and down</button>
+    <button id="p4" data-phrase="S P .S P S' .P S - | G .N M D R S' S -">Wide leaps</button>
+    <button id="p5" data-phrase="S R S R S R S R | G M G M G M G M">Two-note rocking</button>
+  </div>
+
+  <div class="modes">
+    <button id="discrete" class="on">Discrete</button>
+    <button id="squashed">Squashed</button>
+    <button id="continuous">Continuous</button>
+  </div>
+
+  <div class="controls">
+    <button id="play" style="background: var(--accent); border-color: var(--accent); color: #fff;">Play</button>
+    <button id="stop">Stop</button>
+
+    <div class="field">
+      <label for="sa">Sa (Hz)</label>
+      <input type="number" id="sa" value="240" min="80" max="600" step="1">
+    </div>
+
+    <div class="field">
+      <label for="bpm">Beats / min</label>
+      <input type="number" id="bpm" value="100" min="20" max="400" step="5">
+    </div>
+
+    <div class="field">
+      <label for="overlap">Overlap %</label>
+      <input type="number" id="overlap" value="40" min="0" max="150" step="5">
+    </div>
+
+    <div class="field">
+      <label for="glide">Glide %</label>
+      <input type="number" id="glide" value="100" min="0" max="100" step="5">
+    </div>
+  </div>
+
+  <p class="hint" id="hint">Discrete — notes played separately.</p>
+
+  <h2>Pitch over time</h2>
+  <canvas id="contour" aria-label="The pitch of the phrase over time"></canvas>
+  <div class="errors" id="errors"></div>
+
+  <h2>Notation</h2>
+  <ul class="legend">
+    <li><code>S R G M P D N</code> shuddha, <code>r g d n</code> komal, <code>M#</code> tivra Ma</li>
+    <li><code>.P</code> an octave down, <code>S'</code> an octave up, <code>-</code> hold, <code>_</code> rest</li>
+  </ul>
+
+  <p class="note" style="margin-top:18px">
+    Glide is how much of the time between two notes is spent moving rather than resting. At
+    100 the line never stops; lower it and each note is held before travelling, which is
+    roughly what meend does.
+  </p>
+</div>
+
+<script>
+/*__RATIO_BUNDLE__*/
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = RATIO;
+  var el = function (id) { return document.getElementById(id); };
+  var setText = function (id, text) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = text;
+  };
+
+  var mode = 'discrete';
+  var audio = null;
+  var master = null;
+  var voices = [];
+
+  function context() {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      master = audio.createGain();
+      master.gain.setValueAtTime(1, 0);
+      master.connect(audio.destination);
+    }
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
+
+  function settings() {
+    var number = function (id, fallback) {
+      var value = Number(el(id).value);
+      return Number.isFinite(value) ? value : fallback;
+    };
+    return {
+      sa: Math.max(1, number('sa', 240)),
+      bpm: Math.max(1, number('bpm', 100)),
+      overlap: Math.max(0, number('overlap', 40) / 100),
+      glide: Math.min(1, Math.max(0, number('glide', 100) / 100))
+    };
+  }
+
+  function parse() {
+    return S.parseSargam(el('text').value);
+  }
+
+  /** The notes as pitches and beats, which is what both the line and the bars are drawn from. */
+  function nodesOf(result, config) {
+    var nodes = [];
+    result.events.forEach(function (event) {
+      if (event.kind === 'note') {
+        nodes.push({
+          hz: S.frequency(event.swara, event.octave, config.sa, 'just'),
+          beats: event.beats
+        });
+      } else if (nodes.length) {
+        // A rest cannot be glided through, so it lengthens the note before it rather than
+        // dragging the line towards a pitch that was never written.
+        nodes[nodes.length - 1].beats += event.beats;
+      }
+    });
+    return nodes;
+  }
+
+  /* -------------------------------------------------------------------- play */
+
+  function stop() {
+    voices.forEach(function (osc) { try { osc.stop(); } catch (e) {} });
+    voices = [];
+  }
+
+  /** One plucked note, for the two discrete modes. */
+  function pluck(ctx, hz, at, seconds, gain, release) {
+    var fade = Math.min(Math.max(0.03, release), seconds * 0.5);
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, at);
+    out.gain.linearRampToValueAtTime(gain, at + 0.015);
+    out.gain.setValueAtTime(gain, at + seconds - fade);
+    out.gain.linearRampToValueAtTime(0.0001, at + seconds);
+    out.connect(master);
+
+    [[1, 1], [2, 0.16], [3, 0.07]].forEach(function (pair) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(hz * pair[0], at);
+      level.gain.setValueAtTime(pair[1], at);
+      osc.connect(level).connect(out);
+      osc.start(at);
+      osc.stop(at + seconds + 0.05);
+      voices.push(osc);
+    });
+  }
+
+  /**
+   * One voice that never stops, following the pitch line.
+   *
+   * Sampled at 125 points a beat. Not arbitrary: at a low glide the movement is squeezed into
+   * a fraction of the gap and the line becomes steep, and a coarser curve steps by more than
+   * two semitones at a time, which the ear hears as a zipper rather than a slide.
+   */
+  function playLine(ctx, curve, start, seconds) {
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, start);
+    out.gain.linearRampToValueAtTime(0.22, start + 0.08);
+    out.gain.setValueAtTime(0.22, start + seconds - 0.15);
+    out.gain.linearRampToValueAtTime(0.0001, start + seconds);
+    out.connect(master);
+
+    [[1, 1], [2, 0.16], [3, 0.07]].forEach(function (pair) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
+
+      var scaled = new Float32Array(curve.length);
+      for (var i = 0; i < curve.length; i += 1) scaled[i] = curve[i] * pair[0];
+      osc.frequency.setValueCurveAtTime(scaled, start, seconds);
+
+      level.gain.setValueAtTime(pair[1], start);
+      osc.connect(level).connect(out);
+      osc.start(start);
+      osc.stop(start + seconds + 0.05);
+      voices.push(osc);
+    });
+  }
+
+  function play() {
+    stop();
+    var ctx = context();
+    var config = settings();
+    var result = parse();
+    var beat = 60 / config.bpm;
+    var start = ctx.currentTime + 0.08;
+
+    if (mode === 'continuous') {
+      var nodes = nodesOf(result, config);
+      if (!nodes.length) return;
+
+      var curve = S.glideCurve({ nodes: nodes, samplesPerBeat: 125, glide: config.glide });
+      var beats = 0;
+      nodes.forEach(function (node) { beats += node.beats; });
+      playLine(ctx, curve, start, beats * beat);
+
+      setText(
+        'hint',
+        'Continuous — one voice, ' + nodes.length + ' turning points, steepest step ' +
+          S.largestStepCents(curve).toFixed(0) + ' cents, never silent'
+      );
+      draw();
+      return;
+    }
+
+    var overlap = mode === 'squashed' ? config.overlap : 0;
+    var notes = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: overlap,
+      articulation: 0.03
+    });
+
+    var pairs = S.overlappingPairs(notes);
+    notes.forEach(function (note) {
+      var swara = S.SWARAS[((note.semitones % 12) + 12) % 12];
+      var octave = Math.floor(note.semitones / 12);
+      var hz = S.frequency(swara, octave, config.sa, 'just');
+      pluck(ctx, hz, start + note.at, note.seconds, pairs > 0 ? 0.16 : 0.22, overlap > 0 ? 0.04 : 0.09);
+    });
+
+    setText(
+      'hint',
+      mode === 'squashed'
+        ? 'Squashed — ' + pairs + ' of ' + Math.max(0, notes.length - 1) + ' pairs sounding together'
+        : 'Discrete — notes played separately.'
+    );
+    draw();
+  }
+
+  /* ----------------------------------------------------------------- drawing */
+
+  function surface() {
+    var canvas = el('contour');
+    var ratio = window.devicePixelRatio || 1;
+    var width = canvas.clientWidth;
+    var height = canvas.clientHeight;
+
+    if (canvas.width !== Math.round(width * ratio)) canvas.width = Math.round(width * ratio);
+    if (canvas.height !== Math.round(height * ratio)) canvas.height = Math.round(height * ratio);
+
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    return { ctx: ctx, width: width, height: height };
+  }
+
+  /**
+   * The same phrase drawn the way the chosen mode plays it.
+   *
+   * Bars for the discrete modes, overlapping where they overlap; an unbroken line for the
+   * continuous one. Seeing the two against each other is half the answer — the line visits
+   * every pitch the bars do and spends almost none of its time on any of them.
+   */
+  function draw() {
+    var surf = surface();
+    var ctx = surf.ctx;
+    var config = settings();
+    var result = parse();
+    var beat = 60 / config.bpm;
+
+    setText('errors', result.errors.length
+      ? result.errors.map(function (e) { return 'beat ' + (e.token + 1) + ': ' + e.text; }).join('   ')
+      : '');
+
+    var nodes = nodesOf(result, config);
+    if (!nodes.length) return;
+
+    var beats = 0;
+    nodes.forEach(function (node) { beats += node.beats; });
+
+    var pitches = nodes.map(function (node) { return Math.log2(node.hz); });
+    var low = Math.min.apply(null, pitches);
+    var high = Math.max.apply(null, pitches);
+    var pad = Math.max(0.1, (high - low) * 0.16);
+    low -= pad;
+    high += pad;
+
+    var padX = 12;
+    var innerW = surf.width - padX * 2;
+    var xAt = function (b) { return padX + (b / Math.max(1, beats)) * innerW; };
+    var yAt = function (p) { return surf.height - 16 - ((p - low) / (high - low)) * (surf.height - 32); };
+
+    // Sa wherever it falls, so the shape can be read against the tonic.
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    for (var octave = -3; octave <= 3; octave += 1) {
+      var line = Math.log2(config.sa * Math.pow(2, octave));
+      if (line < low || line > high) continue;
+      var y = yAt(line);
+      ctx.strokeStyle = '#2E2A45';
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(surf.width - padX, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6A6878';
+      ctx.fillText(octave === 0 ? 'Sa' : octave > 0 ? 'Sa+' + octave : 'Sa-' + -octave, 2, y - 2);
+    }
+
+    if (mode === 'continuous') {
+      var curve = S.glideCurve({ nodes: nodes, samplesPerBeat: 125, glide: config.glide });
+      ctx.strokeStyle = '#FFD27A';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (var i = 0; i < curve.length; i += 1) {
+        var x = padX + (i / (curve.length - 1)) * innerW;
+        var yy = yAt(Math.log2(curve[i]));
+        if (i === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+      return;
+    }
+
+    var overlap = mode === 'squashed' ? config.overlap : 0;
+    var laid = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: overlap,
+      articulation: 0.03
+    });
+
+    ctx.strokeStyle = 'rgba(124, 92, 255, 0.75)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'butt';
+
+    laid.forEach(function (note) {
+      var event = result.events[note.index];
+      if (!event || event.kind !== 'note') return;
+      var yy = yAt(Math.log2(S.frequency(event.swara, event.octave, config.sa, 'just')));
+      ctx.beginPath();
+      ctx.moveTo(xAt(note.at / beat), yy);
+      ctx.lineTo(xAt((note.at + note.seconds) / beat), yy);
+      ctx.stroke();
+    });
+  }
+
+  /* ---------------------------------------------------------------- controls */
+
+  function choose(next) {
+    mode = next;
+    ['discrete', 'squashed', 'continuous'].forEach(function (id) {
+      el(id).className = id === next ? 'on' : '';
+    });
+    setText(
+      'hint',
+      next === 'discrete'
+        ? 'Discrete — notes played separately.'
+        : next === 'squashed'
+          ? 'Squashed — each note runs into the next.'
+          : 'Continuous — one voice that never stops moving.'
+    );
+    draw();
+    play();
+  }
+
+  el('discrete').addEventListener('click', function () { choose('discrete'); });
+  el('squashed').addEventListener('click', function () { choose('squashed'); });
+  el('continuous').addEventListener('click', function () { choose('continuous'); });
+
+  el('play').addEventListener('click', play);
+  el('stop').addEventListener('click', stop);
+
+  el('text').addEventListener('input', draw);
+  ['sa', 'bpm', 'overlap', 'glide'].forEach(function (id) {
+    el(id).addEventListener('input', draw);
+  });
+
+  ['p1', 'p2', 'p3', 'p4', 'p5'].forEach(function (id) {
+    el(id).addEventListener('click', function () {
+      el('text').value = this.dataset.phrase;
+      draw();
+      play();
+    });
+  });
+
+  el('text').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      play();
+    }
+  });
+
+  window.addEventListener('resize', draw);
+  draw();
+})();
+</script>

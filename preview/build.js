@@ -31,6 +31,15 @@ const TARGETS = [
   { template: 'bonfire-console.template.html', output: 'bonfire-console.html', blocks: 2 },
   { template: 'pixel.template.html', output: 'pixel.html', blocks: 2 },
   { template: 'swatches.template.html', output: 'swatches.html', blocks: 2 },
+  { template: 'sargam.template.html', output: 'sargam.html', blocks: 2 },
+  {
+    template: 'continuous.template.html',
+    output: 'continuous.html',
+    blocks: 2,
+    // Only this page needs the glide, and adding it to every bundle would change pages that
+    // are meant to stay exactly as they are.
+    extra: ['glide'],
+  },
 ];
 
 /**
@@ -52,6 +61,21 @@ const MODULES = [
   'starField',
 ];
 
+/** Modules from `src/generator`, compiled and registered the same way. */
+/**
+ * Modules from `src/generator`, compiled and registered the same way.
+ *
+ * `perlin`, `golden` and `glide` are deliberately absent: they are still in the repo
+ * with their tests, but nothing on a preview page uses them any more, and carrying
+ * dead code into the bundle only makes it harder to see what a page depends on.
+ */
+const GENERATOR_MODULES = ['swara', 'wav', 'randomNotes', 'schedule'];
+
+/** Every generator module any page asks for, compiled once. */
+const ALL_GENERATOR = [
+  ...new Set([...GENERATOR_MODULES, ...TARGETS.flatMap((target) => target.extra ?? [])]),
+];
+
 function compile(outDir) {
   const config = path.join(os.tmpdir(), `ratio-preview-${process.pid}.json`);
 
@@ -68,12 +92,15 @@ function compile(outDir) {
         strict: true,
         module: 'commonjs',
         target: 'es2020',
-        rootDir: sourceDir,
+        rootDir: path.join(ROOT, 'src'),
         outDir,
         skipLibCheck: true,
         removeComments: true,
       },
-      files: MODULES.map((name) => path.join(sourceDir, `${name}.ts`)),
+      files: [
+        ...MODULES.map((name) => path.join(sourceDir, `${name}.ts`)),
+        ...ALL_GENERATOR.map((name) => path.join(ROOT, 'src', 'generator', `${name}.ts`)),
+      ],
     }),
   );
 
@@ -91,15 +118,23 @@ function compile(outDir) {
   }
 }
 
-function assemble(outDir) {
+function assemble(outDir, extra = []) {
   const parts = [
     '// Compiled from src/visualiser/*.ts by preview/build.js — the shipping code, not a copy.',
     'var __m = {};',
     "function __req(id){ return __m[id.replace('./','')]; }",
   ];
 
-  for (const name of MODULES) {
-    const code = fs.readFileSync(path.join(outDir, `${name}.js`), 'utf8');
+  const all = [
+    ...MODULES.map((name) => ({ name, file: path.join(outDir, 'visualiser', `${name}.js`) })),
+    ...[...GENERATOR_MODULES, ...extra].map((name) => ({
+      name,
+      file: path.join(outDir, 'generator', `${name}.js`),
+    })),
+  ];
+
+  for (const { name, file } of all) {
+    const code = fs.readFileSync(file, 'utf8');
     // Written out plainly. An earlier version built this with a template literal whose
     // opening brace was escaped and whose closing brace was not, which left every module
     // with one brace too many.
@@ -108,7 +143,7 @@ function assemble(outDir) {
     );
   }
 
-  parts.push(`var RATIO = Object.assign({}, ${MODULES.map((n) => `__m['${n}']`).join(', ')});`);
+  parts.push(`var RATIO = Object.assign({}, ${all.map(({ name }) => `__m['${name}']`).join(', ')});`);
   return parts.join('\n');
 }
 
@@ -139,10 +174,10 @@ function main() {
 
   try {
     compile(outDir);
-    const bundle = assemble(outDir);
-    console.log(`${MODULES.length} modules, ${bundle.length} bytes of bundle`);
+    console.log(`${MODULES.length + ALL_GENERATOR.length} modules compiled`);
 
     for (const target of TARGETS) {
+      const bundle = assemble(outDir, target.extra ?? []);
       const templatePath = path.join(__dirname, target.template);
       if (!fs.existsSync(templatePath)) {
         console.log(`  skipped ${target.output} — no template`);
@@ -161,6 +196,11 @@ function main() {
       fs.writeFileSync(path.join(__dirname, target.output), html);
       console.log(`  built ${target.output} — blocks ${blocks.map((b) => `${b.length}B`).join(', ')}, all parse`);
     }
+
+    // Parsing is not running. Twice now a page has been written that parsed cleanly and threw
+    // on load, which kills every listener and leaves a page whose buttons do nothing.
+    console.log('');
+    execFileSync(process.execPath, [path.join(__dirname, 'smoke.js')], { stdio: 'inherit' });
   } finally {
     fs.rmSync(outDir, { recursive: true, force: true });
   }

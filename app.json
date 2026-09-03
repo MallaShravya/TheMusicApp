@@ -1,19 +1,18 @@
 {
   "expo": {
-    "name": "Ratio",
+    "name": "Swayve",
     "slug": "musicplayerandmaker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "ratio",
+    "scheme": "swayve",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "android": {
       "package": "com.swatipratyusha.ratio",
       "adaptiveIcon": {
-        "backgroundColor": "#0B0B10",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,

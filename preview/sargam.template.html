@@ -1,0 +1,948 @@
+<title>Sargam Scratchpad</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /*
+    Single-theme on purpose. This is an instrument panel, not a document: it wants a quiet
+    dark ground so the note being played can be the only bright thing on the page. Every
+    colour is written explicitly so it holds on either host background.
+  */
+  :root {
+    --ground: #0E0E14;
+    --panel: #171720;
+    --line: #262633;
+    --ink: #ECEBF2;
+    --muted: #9895A6;
+    --faint: #6A6878;
+    --accent: #7C5CFF;
+    --accent-dim: rgba(124, 92, 255, 0.16);
+    --warn: #E4A11B;
+    --sounding: #FFD27A;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 26px 18px 72px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 22px; }
+  h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 58ch; }
+
+  h2 {
+    margin: 26px 0 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 92px;
+    resize: vertical;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 14px; }
+
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 11px; color: var(--muted); }
+
+  select, input[type="number"] {
+    font: inherit;
+    font-size: 13px;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 9px;
+  }
+
+  input[type="number"] { width: 92px; font-variant-numeric: tabular-nums; }
+  select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  button {
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 15px;
+    cursor: pointer;
+  }
+
+  button:hover { border-color: var(--accent); background: var(--accent-dim); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { filter: brightness(1.1); }
+  button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* The parsed phrase, as chips. The one sounding is lit. */
+  .phrase { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; margin-top: 4px; }
+
+  .chip {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 14px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .chip .oct { color: var(--faint); font-size: 11px; }
+  .chip .beats { color: var(--faint); font-size: 11px; margin-left: 3px; }
+  .chip.rest { color: var(--faint); }
+
+  /*
+    Repeated stretches. Every occurrence is tinted, source and copy alike, because seeing only
+    the copies would say where a repeat landed and not what it repeats.
+
+    These sit above `.rest` and below `.sounding` on purpose: a rest inside a repeat should
+    still be tinted, and the note currently playing should still be the brightest thing on the
+    page whatever else it is part of.
+  */
+  .chip.loop0 { background: rgba(63, 184, 160, 0.2); border-color: rgba(63, 184, 160, 0.65); }
+  .chip.loop1 { background: rgba(224, 138, 184, 0.18); border-color: rgba(224, 138, 184, 0.6); }
+  .chip.loop2 { background: rgba(120, 160, 255, 0.18); border-color: rgba(120, 160, 255, 0.6); }
+  .chip.loop3 { background: rgba(214, 178, 92, 0.18); border-color: rgba(214, 178, 92, 0.6); }
+
+  .chip.sounding { background: var(--sounding); border-color: var(--sounding); color: #1A1408; }
+  .chip.sounding .oct, .chip.sounding .beats { color: rgba(26, 20, 8, 0.6); }
+
+  .canvas {
+    display: block;
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .scope { height: 120px; }
+  .contour { height: 150px; }
+
+  .hint { margin: 6px 0 0; color: var(--faint); font-size: 11.5px; font-family: 'IBM Plex Mono', monospace; }
+  .note { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; max-width: 58ch; }
+
+  .errors { margin-top: 10px; color: var(--warn); font-size: 12.5px; }
+  .errors code { font-family: 'IBM Plex Mono', monospace; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 4px; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; }
+  td { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+  td.name { color: var(--ink); }
+  td.num { text-align: right; }
+  .cents { color: var(--faint); }
+
+  .legend { display: grid; gap: 3px; color: var(--muted); font-size: 12.5px; margin: 0; padding: 0; list-style: none; }
+  .legend code {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .field.weight input { width: 64px; }
+
+  .check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); }
+  .check input { accent-color: var(--accent); margin: 0; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .presets button { font-size: 12px; padding: 5px 10px; }
+</style>
+
+<div class="page">
+  <header>
+    <h1>Sargam Scratchpad</h1>
+    <p>
+      Type swaras, hear them. The parser is <code>src/generator/swara.ts</code> compiled
+      straight out of the app, so the pitches here are the pitches it will produce.
+    </p>
+  </header>
+
+  <h2>Phrase</h2>
+  <textarea id="text" spellcheck="false" aria-label="Sargam phrase">.N S R | M R - | P M R S</textarea>
+
+  <div class="presets">
+    <button id="p1" data-phrase=".N S R | M R - | P M R S">Brindavani Sarang pakad</button>
+    <button id="p2" data-phrase="S R G M P D N S'">Bilawal ascent</button>
+    <button id="p3" data-phrase="S g M d n S' - | S' n d M g S -">Malkauns</button>
+    <button id="p4" data-phrase="S R M P n S' | S' N P M R S">Sarang, both nishads</button>
+    <button id="p5" data-phrase="S - R - G - M - P - D - N - S' -">Slow scale</button>
+  </div>
+
+  <div class="controls">
+    <button id="play" class="primary">Play</button>
+    <button id="stop">Stop</button>
+    <button id="drone" aria-pressed="false">Drone</button>
+
+    <div class="field">
+      <label for="sa">Sa (Hz)</label>
+      <input type="number" id="sa" value="240" min="80" max="600" step="1">
+    </div>
+
+    <div class="field">
+      <label for="bpm">Beats / min</label>
+      <input type="number" id="bpm" value="90" min="20" max="300" step="5">
+    </div>
+
+    <div class="field">
+      <label for="tuning">Tuning</label>
+      <select id="tuning">
+        <option value="equal">Equal temperament</option>
+        <option value="just">Just intonation</option>
+      </select>
+    </div>
+
+    <label class="check"><input type="checkbox" id="squash"> Squash</label>
+
+    <div class="field">
+      <label for="overlap">Overlap %</label>
+      <input type="number" id="overlap" value="25" min="0" max="200" step="5">
+    </div>
+  </div>
+  <p class="hint" id="playHint"></p>
+
+  <h2>Random notes</h2>
+  <p class="note">
+    Still no scale and no weighting toward any note. One note recurs on a fixed beat and
+    another halfway between &mdash; both picked at random, neither of them necessarily Sa
+    &mdash; some beats hold or fall silent instead of sounding something new, and a couple of
+    earlier stretches come back later unchanged.
+  </p>
+
+  <div class="controls">
+    <button id="random" class="primary">Generate</button>
+
+    <div class="field">
+      <label for="count">Notes</label>
+      <input type="number" id="count" value="40" min="2" max="200" step="1">
+    </div>
+
+    <div class="field">
+      <label for="anchor">Sa every</label>
+      <input type="number" id="anchor" value="8" min="0" max="32" step="1">
+    </div>
+
+    <div class="field">
+      <label for="spread">Range</label>
+      <input type="number" id="spread" value="16" min="1" max="36" step="1">
+    </div>
+
+    <label class="check"><input type="checkbox" id="midpoint" checked> Fixed midpoint</label>
+
+    <label class="check"><input type="checkbox" id="shuddha"> Shuddha only</label>
+
+    <div class="field">
+      <label for="holds">Holds %</label>
+      <input type="number" id="holds" value="20" min="0" max="60" step="1">
+    </div>
+
+    <div class="field">
+      <label for="rests">Rests %</label>
+      <input type="number" id="rests" value="9" min="0" max="40" step="1">
+    </div>
+
+    <div class="field">
+      <label for="loops">Loop backs</label>
+      <input type="number" id="loops" value="2" min="0" max="6" step="1">
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="field weight">
+      <label for="w1">Step 1</label>
+      <input type="number" id="w1" value="36" min="0" max="100" step="1">
+    </div>
+    <div class="field weight">
+      <label for="w2">Step 2</label>
+      <input type="number" id="w2" value="36" min="0" max="100" step="1">
+    </div>
+    <div class="field weight">
+      <label for="w3">Step 3</label>
+      <input type="number" id="w3" value="25" min="0" max="100" step="1">
+    </div>
+    <div class="field weight">
+      <label for="w4">Step 4</label>
+      <input type="number" id="w4" value="3" min="0" max="100" step="1">
+    </div>
+  </div>
+
+  <p class="hint" id="randomHint"></p>
+  <p class="hint" id="stepHint"></p>
+
+  <h2>Waveform</h2>
+  <canvas id="scope" class="canvas scope" aria-label="Live waveform of the sounding audio"></canvas>
+  <p class="hint" id="scopeHint">Silent &mdash; press Play or turn the drone on.</p>
+
+  <h2>Contour</h2>
+  <canvas id="contour" class="canvas contour" aria-label="Pitch of each swara over time"></canvas>
+
+  <h2>Parsed</h2>
+  <div class="phrase" id="phrase"></div>
+  <div class="errors" id="errors"></div>
+
+  <h2>Notation</h2>
+  <ul class="legend">
+    <li><code>S R G M P D N</code> &mdash; shuddha swaras</li>
+    <li><code>r g d n</code> &mdash; komal Re, Ga, Dha, Ni</li>
+    <li><code>M#</code> or <code>m</code> &mdash; tivra Ma</li>
+    <li><code>.P</code> lowers an octave, <code>S'</code> raises one; both repeat</li>
+    <li><code>-</code> holds the previous swara another beat, <code>_</code> is a beat of silence</li>
+    <li><code>|</code> is a bar line and is ignored</li>
+  </ul>
+
+  <h2>The twelve swaras at this Sa</h2>
+  <table>
+    <thead>
+      <tr><th>Swara</th><th></th><th class="num">Equal</th><th class="num">Just</th><th class="num">Difference</th></tr>
+    </thead>
+    <tbody id="table"></tbody>
+  </table>
+</div>
+
+<script>
+/*__RATIO_BUNDLE__*/
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = RATIO;
+  var el = function (id) { return document.getElementById(id); };
+
+  /** Writes to a readout only if it is still on the page, so a removed one cannot kill a loop. */
+  var setText = function (id, text) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = text;
+  };
+
+  var audio = null;
+  var master = null;
+  var analyser = null;
+  var scopeData = null;
+  var voices = [];
+  var droneNodes = null;
+  var scheduled = [];
+
+  // Where the current phrase started, on the audio clock, so the playhead cannot drift away
+  // from what is actually being heard.
+  var playStart = 0;
+  var playBeats = 0;
+  var beatSeconds = 0;
+  var contourFrame = 0;
+
+  /**
+   * Everything audible goes through one master gain into an analyser.
+   *
+   * The analyser is why this exists rather than each voice connecting straight to the output:
+   * an oscilloscope has to see the summed signal, drone included, or it shows a waveform
+   * nobody is actually hearing.
+   */
+  function context() {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      master = audio.createGain();
+      analyser = audio.createAnalyser();
+      analyser.fftSize = 2048;
+      scopeData = new Uint8Array(analyser.fftSize);
+      master.connect(analyser);
+      analyser.connect(audio.destination);
+      requestAnimationFrame(drawScope);
+    }
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
+
+  /** Canvases are sized in CSS pixels but drawn in device pixels, or the line is fuzzy. */
+  function surface(id) {
+    var canvas = el(id);
+    var ratio = window.devicePixelRatio || 1;
+    var width = canvas.clientWidth;
+    var height = canvas.clientHeight;
+
+    if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+    }
+
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    return { ctx: ctx, width: width, height: height };
+  }
+
+  function parse() {
+    return S.parseSargam(el('text').value);
+  }
+
+  function settings() {
+    var overlap = Number(el('overlap').value);
+    return {
+      sa: Math.max(1, Number(el('sa').value) || 240),
+      bpm: Math.max(1, Number(el('bpm').value) || 90),
+      tuning: el('tuning').value,
+      // Only when squashing: the field keeps its value while the option is off, so turning
+      // it back on returns to whatever was set rather than to a default.
+      overlap: el('squash').checked ? Math.max(0, (Number.isFinite(overlap) ? overlap : 25) / 100) : 0
+    };
+  }
+
+  /* ------------------------------------------------------------------- scope */
+
+  /**
+   * The sounding waveform, live.
+   *
+   * Drawn from the analyser rather than from the maths, so it shows what is actually leaving
+   * the graph, and shows clipping if the levels are ever wrong. The trace is aligned to a
+   * rising zero crossing, otherwise a steady tone slides sideways every frame and reads as
+   * motion that is not there.
+   */
+  function drawScope() {
+    requestAnimationFrame(drawScope);
+    if (!analyser) return;
+
+    var surf = surface('scope');
+    var ctx = surf.ctx;
+    analyser.getByteTimeDomainData(scopeData);
+
+    var peak = 0;
+    for (var i = 0; i < scopeData.length; i += 1) {
+      peak = Math.max(peak, Math.abs(scopeData[i] - 128));
+    }
+
+    ctx.strokeStyle = '#262633';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, surf.height / 2);
+    ctx.lineTo(surf.width, surf.height / 2);
+    ctx.stroke();
+
+    if (peak < 2) {
+      setText('scopeHint', 'Silent - press Play or turn the drone on.');
+      return;
+    }
+
+    var start = 0;
+    for (var j = 1; j < scopeData.length / 2; j += 1) {
+      if (scopeData[j - 1] < 128 && scopeData[j] >= 128) { start = j; break; }
+    }
+
+    var span = Math.floor(scopeData.length * 0.66);
+
+    ctx.strokeStyle = '#FFD27A';
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+
+    for (var k = 0; k < span; k += 1) {
+      var value = (scopeData[(start + k) % scopeData.length] - 128) / 128;
+      var x = (k / span) * surf.width;
+      var y = surf.height / 2 - value * (surf.height / 2 - 6);
+      if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    setText('scopeHint', 'peak ' + (peak / 128).toFixed(2) + ' of full scale');
+  }
+
+  /* ----------------------------------------------------------------- contour */
+
+  /**
+   * The phrase as pitch against time.
+   *
+   * Vertical position is log frequency, so an octave is the same distance whatever Sa is set
+   * to — the only mapping under which the shape of a phrase stays the shape of that phrase.
+   * Sa is marked in every octave the phrase reaches.
+   */
+  function drawContour() {
+    cancelAnimationFrame(contourFrame);
+
+    var surf = surface('contour');
+    var ctx = surf.ctx;
+    var result = parse();
+    var config = settings();
+
+    var notes = result.events.filter(function (e) { return e.kind === 'note'; });
+    if (!notes.length) return;
+
+    // Drawn from the schedule, not from the beat counts. Bars taken straight from the notation
+    // can never show an overlap, because the notation has no idea one is happening — which is
+    // why squashing was audible in the graph's absence and invisible in the graph.
+    var beat = 60 / config.bpm;
+    var laid = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: config.overlap,
+      articulation: 0.03
+    });
+
+    var beats = S.scheduleBeats(result.events);
+    for (var l = 0; l < laid.length; l += 1) {
+      beats = Math.max(beats, (laid[l].at + laid[l].seconds) / beat);
+    }
+
+    var pitches = notes.map(function (e) {
+      return Math.log2(S.frequency(e.swara, e.octave, config.sa, config.tuning));
+    });
+
+    var low = Math.min.apply(null, pitches);
+    var high = Math.max.apply(null, pitches);
+    var pad = Math.max(0.12, (high - low) * 0.18);
+    low -= pad;
+    high += pad;
+
+    var padX = 10;
+    var innerW = surf.width - padX * 2;
+    var xAt = function (b) { return padX + (b / Math.max(1, beats)) * innerW; };
+    var yAt = function (p) { return surf.height - 12 - ((p - low) / (high - low)) * (surf.height - 24); };
+
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    for (var oct = -3; oct <= 3; oct += 1) {
+      var line = Math.log2(config.sa * Math.pow(2, oct));
+      if (line < low || line > high) continue;
+      var y = yAt(line);
+      ctx.strokeStyle = '#2E2A45';
+      ctx.setLineDash([3, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(surf.width - padX, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6A6878';
+      ctx.fillText(oct === 0 ? 'Sa' : oct > 0 ? 'Sa+' + oct : 'Sa-' + -oct, 2, y - 2);
+    }
+
+    // Semi-transparent, so where two bars cross in time the overlap is visible as a darker
+    // patch rather than one bar hiding the other.
+    ctx.strokeStyle = 'rgba(124, 92, 255, 0.75)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'butt';
+
+    laid.forEach(function (note) {
+      var event = result.events[note.index];
+      if (!event || event.kind !== 'note') return;
+      var yy = yAt(Math.log2(S.frequency(event.swara, event.octave, config.sa, config.tuning)));
+      ctx.beginPath();
+      ctx.moveTo(xAt(note.at / beat), yy);
+      ctx.lineTo(xAt((note.at + note.seconds) / beat), yy);
+      ctx.stroke();
+    });
+
+    if (audio && playBeats > 0) {
+      var elapsed = (audio.currentTime - playStart) / beatSeconds;
+      if (elapsed >= 0 && elapsed <= playBeats) {
+        var x = xAt(elapsed);
+        ctx.strokeStyle = '#FFD27A';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, 4);
+        ctx.lineTo(x, surf.height - 4);
+        ctx.stroke();
+        contourFrame = requestAnimationFrame(drawContour);
+      } else if (elapsed > playBeats) {
+        playBeats = 0;
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ render */
+
+  /**
+   * Which stretches of the phrase are repeats of each other.
+   *
+   * Read back out of the text rather than remembered from the generator, so it also marks
+   * repetition in something typed by hand, and stays right after an edit. Returns a map from
+   * block number to a colour index; blocks appearing only once are absent.
+   *
+   * The block is the half-period, which is the unit the generator copies — every repeat it
+   * makes begins on a recurring note and ends on the note before the next one.
+   */
+  function repeatedBlocks(tokens, size) {
+    var groups = {};
+    var marks = {};
+    if (!(size > 0)) return marks;
+
+    for (var b = 0; (b + 1) * size <= tokens.length; b += 1) {
+      var key = tokens.slice(b * size, (b + 1) * size).join(' ');
+      (groups[key] = groups[key] || []).push(b);
+    }
+
+    var colour = 0;
+    for (var key2 in groups) {
+      if (groups[key2].length < 2) continue;
+      for (var i = 0; i < groups[key2].length; i += 1) marks[groups[key2][i]] = colour % 4;
+      colour += 1;
+    }
+
+    return marks;
+  }
+
+  function render() {
+    var result = parse();
+    var config = settings();
+    var phrase = el('phrase');
+    phrase.innerHTML = '';
+
+    var written = el('text').value.replace(/\|/g, ' ').split(/\s+/).filter(Boolean);
+    var period = Math.max(0, Math.round(Number(el('anchor').value) || 0));
+    var block = el('midpoint').checked && period >= 2 ? Math.floor(period / 2) : period;
+    var loops = repeatedBlocks(written, block);
+
+    result.events.forEach(function (event, index) {
+      var chip = document.createElement('span');
+      // `event.token` is where this began in the written line, which is what the blocks were
+      // counted in — an event is not a beat, since a hold folds into the note before it.
+      var mark = block > 0 ? loops[Math.floor(event.token / block)] : undefined;
+      chip.className =
+        'chip' +
+        (event.kind === 'rest' ? ' rest' : '') +
+        (mark === undefined ? '' : ' loop' + mark);
+      chip.dataset.index = index;
+
+      if (event.kind === 'rest') {
+        chip.textContent = '_';
+      } else {
+        var mark = event.octave < 0
+          ? new Array(-event.octave + 1).join('.')
+          : event.octave > 0 ? new Array(event.octave + 1).join("'") : '';
+        chip.innerHTML =
+          (event.octave < 0 ? '<span class="oct">' + mark + '</span>' : '') +
+          event.swara.name +
+          (event.octave > 0 ? '<span class="oct">' + mark + '</span>' : '');
+      }
+
+      if (event.beats > 1) {
+        chip.innerHTML += '<span class="beats">x' + event.beats + '</span>';
+      }
+      phrase.appendChild(chip);
+    });
+
+    el('errors').innerHTML = result.errors.length
+      ? result.errors
+          .map(function (e) { return 'token ' + (e.token + 1) + ': <code>' + e.text + '</code> - ' + e.reason; })
+          .join('<br>')
+      : '';
+
+    var body = el('table');
+    body.innerHTML = '';
+    S.SWARAS.forEach(function (swara) {
+      var equal = S.frequency(swara, 0, config.sa, 'equal');
+      var just = S.frequency(swara, 0, config.sa, 'just');
+      var cents = S.justVersusEqual(swara);
+      var row = document.createElement('tr');
+      row.innerHTML =
+        '<td class="name">' + swara.name + '</td>' +
+        '<td>' + swara.spoken + '</td>' +
+        '<td class="num">' + equal.toFixed(1) + '</td>' +
+        '<td class="num">' + just.toFixed(1) + '</td>' +
+        '<td class="num cents">' + (cents >= 0 ? '+' : '') + cents.toFixed(1) + ' cents</td>';
+      body.appendChild(row);
+    });
+
+    drawContour();
+  }
+
+  /* -------------------------------------------------------------------- play */
+
+  /**
+   * One plucked note.
+   *
+   * A sine with two quiet harmonics rather than a bright timbre: this page exists to judge
+   * pitch, and a rich tone makes small tuning differences harder to hear. The envelope has
+   * real attack and release because a gain that jumps clicks at every note boundary.
+   */
+  function pluck(ctx, hz, at, seconds, gain, release) {
+    // The release has to be short when notes overlap. At a fixed ninety milliseconds a
+    // squashed note spends more than half its overhang fading, so two notes that are
+    // genuinely sounding together are heard as one note with a tail — the overlap is real in
+    // the schedule and inaudible in the room.
+    var fade = Math.min(Math.max(0.03, release === undefined ? 0.09 : release), seconds * 0.5);
+
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, at);
+    out.gain.linearRampToValueAtTime(gain, at + 0.015);
+    out.gain.setValueAtTime(gain, at + seconds - fade);
+    out.gain.linearRampToValueAtTime(0.0001, at + seconds);
+    out.connect(master);
+
+    [[1, 1], [2, 0.16], [3, 0.07]].forEach(function (pair) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(hz * pair[0], at);
+      level.gain.setValueAtTime(pair[1], at);
+      osc.connect(level).connect(out);
+      osc.start(at);
+      osc.stop(at + seconds + 0.05);
+      voices.push(osc);
+    });
+  }
+
+  function clearSounding() {
+    var lit = document.querySelectorAll('.chip.sounding');
+    for (var i = 0; i < lit.length; i += 1) lit[i].classList.remove('sounding');
+  }
+
+  function stop() {
+    playBeats = 0;
+    scheduled.forEach(clearTimeout);
+    scheduled = [];
+    voices.forEach(function (osc) { try { osc.stop(); } catch (e) {} });
+    voices = [];
+    clearSounding();
+  }
+
+  function play() {
+    stop();
+    var ctx = context();
+    var result = parse();
+    var config = settings();
+    var beat = 60 / config.bpm;
+    var start = ctx.currentTime + 0.08;
+
+    // When each note begins and how long it lasts is `src/generator/schedule.ts`, not this
+    // page: overlapping notes is a decision about the music rather than about the player.
+    var notes = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: config.overlap,
+      articulation: 0.03
+    });
+
+    playStart = start;
+    beatSeconds = beat;
+    playBeats = S.scheduleBeats(result.events);
+    contourFrame = requestAnimationFrame(drawContour);
+
+    // Quieter when notes pile up, or the overlaps sum into distortion.
+    var pairs = S.overlappingPairs(notes);
+    var gain = pairs > 0 ? 0.15 : 0.22;
+
+    notes.forEach(function (note) {
+      var swara = S.SWARAS[((note.semitones % 12) + 12) % 12];
+      var octave = Math.floor(note.semitones / 12);
+      var hz = S.frequency(swara, octave, config.sa, config.tuning);
+      pluck(ctx, hz, start + note.at, note.seconds, gain, config.overlap > 0 ? 0.04 : 0.09);
+
+      scheduled.push(setTimeout(function () {
+        clearSounding();
+        var chip = document.querySelector('.chip[data-index="' + note.index + '"]');
+        if (chip) chip.classList.add('sounding');
+      }, Math.max(0, note.at * 1000 + 80)));
+    });
+
+    var total = playBeats * beat;
+    scheduled.push(setTimeout(clearSounding, Math.max(0, total * 1000 + 80)));
+
+    setText(
+      'playHint',
+      config.overlap > 0
+        ? pairs + ' of ' + Math.max(0, notes.length - 1) + ' pairs sounding together, ' +
+            Math.round(config.overlap * 100) + '% of a beat each'
+        : 'notes played separately'
+    );
+  }
+
+  /**
+   * A drone on Sa and Pa.
+   *
+   * Not a tanpura. But a raga is only really audible against a sustained tonic, and the
+   * difference between the two tunings is inaudible without one.
+   */
+  function toggleDrone() {
+    var button = el('drone');
+
+    if (droneNodes) {
+      droneNodes.forEach(function (node) { try { node.stop(); } catch (e) {} });
+      droneNodes = null;
+      button.setAttribute('aria-pressed', 'false');
+      return;
+    }
+
+    var ctx = context();
+    var config = settings();
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, ctx.currentTime);
+    out.gain.linearRampToValueAtTime(0.09, ctx.currentTime + 0.6);
+    out.connect(master);
+
+    var sa = config.sa;
+    var pa = S.frequency(
+      S.SWARAS.filter(function (s) { return s.name === 'P'; })[0],
+      -1,
+      sa,
+      config.tuning
+    );
+
+    droneNodes = [sa / 2, pa, sa].map(function (hz, index) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(hz, ctx.currentTime);
+      level.gain.setValueAtTime(index === 2 ? 0.5 : 0.8, ctx.currentTime);
+      osc.connect(level).connect(out);
+      osc.start();
+      return osc;
+    });
+
+    button.setAttribute('aria-pressed', 'true');
+  }
+
+  /* ------------------------------------------------------------------ random */
+
+  /**
+   * A plain random sequence, written into the phrase box.
+   *
+   * Written rather than played straight so it can be read, edited and kept: the text is the
+   * record. Nothing here shapes the result — no scale, no weighting, no memory beyond the
+   * previous note. The step limit is the only constraint, and it is there because notes that
+   * leap freely stop sounding like a sequence at all.
+   */
+  function generateRandom() {
+    var num = function (id, fallback) {
+      var value = Number(el(id).value);
+      return Number.isFinite(value) ? value : fallback;
+    };
+
+    var spread = Math.max(1, Math.round(num('spread', 16)));
+    var weights = [
+      0,
+      Math.max(0, num('w1', 36)),
+      Math.max(0, num('w2', 36)),
+      Math.max(0, num('w3', 25)),
+      Math.max(0, num('w4', 3))
+    ];
+
+    var period = Math.max(0, Math.round(num('anchor', 8)));
+    var tokens = S.randomPhrase({
+      count: Math.max(2, Math.round(num('count', 40))),
+      anchorEvery: period,
+      midpointAnchor: el('midpoint').checked,
+      allowedPitchClasses: el('shuddha').checked ? S.SHUDDHA_SWARAS : undefined,
+      holdChance: num('holds', 20) / 100,
+      restChance: num('rests', 9) / 100,
+      loopBacks: Math.max(0, Math.round(num('loops', 2))),
+      stepWeights: weights,
+      lowest: -spread,
+      highest: spread
+    });
+
+    el('text').value = S.phraseToSargam(tokens);
+    render();
+    play();
+
+    var notes = S.soundedNotes(tokens);
+    var half = period >= 2 ? Math.floor(period / 2) : 0;
+    var anchorNote = tokens[0].kind === 'note' ? S.toSargam(tokens[0].semitones) : '?';
+    var mid = el('midpoint').checked && half > 0 && tokens[half] && tokens[half].kind === 'note'
+      ? '   midpoint ' + S.toSargam(tokens[half].semitones)
+      : '';
+
+    var holds = tokens.filter(function (t) { return t.kind === 'hold'; }).length;
+    var rests = tokens.filter(function (t) { return t.kind === 'rest'; }).length;
+
+    // Which stretches ended up identical, so a repeat can be seen as well as heard.
+    var block = half > 0 ? half : period;
+    var repeats = 0;
+    if (block > 0) {
+      var seen = {};
+      for (var b = 0; b * block < tokens.length; b += 1) {
+        var key = JSON.stringify(tokens.slice(b * block, b * block + block));
+        if (seen[key]) repeats += 1;
+        seen[key] = true;
+      }
+    }
+
+    setText(
+      'randomHint',
+      tokens.length + ' beats - ' + notes.length + ' notes, ' + holds + ' holds, ' + rests +
+        ' rests, ' + repeats + ' repeated stretches   anchor ' + anchorNote + mid +
+        (el('shuddha').checked ? '   shuddha only' : '')
+    );
+
+    // The distribution that came out, not the one that went in: the recurring notes override
+    // the weights whenever the arithmetic leaves no alternative.
+    var histogram = S.stepHistogram(notes);
+    var total = Math.max(1, notes.length - 1);
+    var parts = [];
+    for (var size = 1; size < histogram.length; size += 1) {
+      var used = histogram[size] || 0;
+      if (used) parts.push(size + ': ' + used + ' (' + Math.round((used / total) * 100) + '%)');
+    }
+    setText('stepHint', 'steps between sounded notes - ' + parts.join('   '));
+  }
+
+  /* ---------------------------------------------------------------- controls */
+
+  el('text').addEventListener('input', render);
+  el('sa').addEventListener('input', render);
+  el('bpm').addEventListener('input', render);
+  el('tuning').addEventListener('change', render);
+  // Replayed rather than merely redrawn: the whole point of the option is what it sounds
+  // like, and a control that changes a graph while the ear hears the old version is a control
+  // that appears not to work.
+  el('squash').addEventListener('change', function () {
+    render();
+    play();
+  });
+  el('overlap').addEventListener('input', function () {
+    render();
+    if (el('squash').checked) play();
+  });
+
+  el('play').addEventListener('click', play);
+  el('stop').addEventListener('click', stop);
+  el('drone').addEventListener('click', toggleDrone);
+  el('random').addEventListener('click', generateRandom);
+
+  ['p1', 'p2', 'p3', 'p4', 'p5'].forEach(function (id) {
+    el(id).addEventListener('click', function () {
+      el('text').value = this.dataset.phrase;
+      render();
+      play();
+    });
+  });
+
+  // Enter plays, so a phrase can be tried without reaching for the mouse.
+  el('text').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      play();
+    }
+  });
+
+  window.addEventListener('resize', render);
+
+  render();
+})();
+</script>

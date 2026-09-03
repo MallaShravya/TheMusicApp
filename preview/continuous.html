@@ -1,363 +1,201 @@
-<title>Bonfire Console</title>
+<title>Notes or a Line</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 
 <style>
-  /* Committed single-theme dark, deliberately: flame colour cannot be judged against a
-     light ground. Every colour is painted explicitly so the page holds on either host. */
+  /* One dark instrument panel, committed to deliberately: the only bright thing should be
+     the pitch line being compared. Every colour written out so it holds on either ground. */
   :root {
-    --ground:       #08080C;
-    --panel:        #15151D;
-    --panel-raised: #1E1E28;
-    --line:         #272733;
-    --line-soft:    #1C1C26;
-    --ink:          #F2F2F7;
-    --ink-muted:    #9A9AAB;
-    --ink-faint:    #6B6B7B;
-    --accent:       #7C5CFF;
-    --accent-soft:  rgba(124, 92, 255, 0.16);
-    --ember:        #FF3B30;
-
-    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-
-    --gap: 20px;
-    --radius: 10px;
+    --ground: #0E0E14;
+    --panel: #171720;
+    --line: #262633;
+    --ink: #ECEBF2;
+    --muted: #9895A6;
+    --faint: #6A6878;
+    --accent: #7C5CFF;
+    --accent-dim: rgba(124, 92, 255, 0.16);
+    --warn: #E4A11B;
+    color-scheme: dark;
   }
-
-  * { box-sizing: border-box; }
 
   body {
     margin: 0;
     background: var(--ground);
     color: var(--ink);
-    font-family: var(--sans);
-    font-size: 15px;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 14px;
     line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
   }
 
-  .wrap {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 28px 20px 64px;
-    display: flex;
-    flex-direction: column;
-    gap: var(--gap);
-  }
+  .page { max-width: 760px; margin: 0 auto; padding: 26px 18px 72px; }
 
-  /* ---- header ---------------------------------------------------------- */
-  header { display: flex; flex-direction: column; gap: 6px; }
+  header { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 20px; }
+  h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 62ch; }
 
-  h1 {
-    margin: 0;
-    font-size: 21px;
+  h2 {
+    margin: 24px 0 8px;
+    font-size: 10.5px;
     font-weight: 600;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-
-  .lede { margin: 0; color: var(--ink-muted); max-width: 62ch; }
-
-  .mapping {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 18px;
-    margin-top: 4px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-faint);
-  }
-  .mapping b { color: var(--ink-muted); font-weight: 500; }
-
-  /* ---- stage ----------------------------------------------------------- */
-  .stage {
-    position: relative;
-    background:
-      radial-gradient(120% 80% at 50% 100%, #12101A 0%, var(--ground) 62%);
-    border: 1px solid var(--line-soft);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  #fire { display: block; width: 100%; height: auto; }
-
-  .stage-note {
-    position: absolute;
-    top: 12px;
-    left: 14px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--ink-faint);
-    pointer-events: none;
+    color: var(--faint);
   }
 
-  /* ---- console --------------------------------------------------------- */
-  .console {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-    gap: var(--gap);
-    align-items: start;
-  }
-
-  .group {
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    resize: vertical;
     background: var(--panel);
+    color: var(--ink);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
   }
 
-  .group > h2 {
-    margin: 0;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 14px; }
+
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 11px; color: var(--muted); }
+
+  input[type="number"] {
+    font: inherit;
+    font-size: 13px;
+    width: 84px;
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* ---- controls -------------------------------------------------------- */
-  .segmented { display: flex; gap: 6px; flex-wrap: wrap; }
+  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   button {
-    font-family: var(--sans);
+    font: inherit;
     font-size: 13px;
     font-weight: 500;
-    color: var(--ink-muted);
-    background: var(--panel-raised);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 7px 14px;
-    cursor: pointer;
-    transition: color 120ms, background 120ms, border-color 120ms;
-  }
-  button:hover { color: var(--ink); border-color: #34344a; }
-  button[aria-pressed="true"] {
     color: var(--ink);
-    background: var(--accent-soft);
-    border-color: var(--accent);
-  }
-  button:focus-visible,
-  input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  .transport { display: flex; align-items: center; gap: 10px; }
-  .transport button { min-width: 74px; }
-
-  .clock {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-faint);
-    font-variant-numeric: tabular-nums;
-    margin-left: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 15px;
+    cursor: pointer;
   }
 
-  #timeline {
+  button:hover { border-color: var(--accent); background: var(--accent-dim); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .presets button { font-size: 12px; padding: 6px 10px; }
+
+  canvas {
     display: block;
     width: 100%;
-    height: 46px;
-    border-radius: 6px;
-    background: var(--panel-raised);
-    cursor: pointer;
+    height: 190px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
   }
 
-  .slider { display: flex; flex-direction: column; gap: 5px; }
-  .form-controls { display: flex; flex-direction: column; gap: 14px; }
+  .hint { margin: 8px 0 0; color: var(--faint); font-size: 11.5px; font-family: 'IBM Plex Mono', monospace; }
+  .note { margin: 0 0 10px; color: var(--muted); font-size: 12.5px; max-width: 62ch; }
+  .errors { margin-top: 8px; color: var(--warn); font-size: 12.5px; }
 
-  .slider-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    font-size: 13px;
-    color: var(--ink-muted);
-  }
-  .slider-head output {
-    font-family: var(--mono);
-    font-size: 12px;
+  .legend { display: grid; gap: 3px; color: var(--muted); font-size: 12.5px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .legend code {
+    font-family: 'IBM Plex Mono', monospace;
     color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-
-  input[type="range"] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 18px;
-    background: transparent;
-    cursor: pointer;
-    margin: 0;
-  }
-  input[type="range"]::-webkit-slider-runnable-track {
-    height: 3px; border-radius: 2px; background: var(--line);
-  }
-  input[type="range"]::-moz-range-track {
-    height: 3px; border-radius: 2px; background: var(--line);
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none;
-    width: 13px; height: 13px; border-radius: 50%;
-    background: var(--ink); border: none; margin-top: -5px;
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 13px; height: 13px; border-radius: 50%;
-    background: var(--ink); border: none;
-  }
-  input[type="range"]:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* ---- meters ---------------------------------------------------------- */
-  .meter { display: flex; flex-direction: column; gap: 5px; }
-  .meter-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-size: 13px; color: var(--ink-muted);
-  }
-  .meter-head output {
-    font-family: var(--mono); font-size: 12px; color: var(--ink);
-    font-variant-numeric: tabular-nums;
-  }
-  .meter-track {
-    height: 6px; border-radius: 3px; background: var(--panel-raised); overflow: hidden;
-  }
-  .meter-fill { height: 100%; width: 0%; border-radius: 3px; }
-  #ampFill { background: var(--ink-muted); }
-
-  .ramp {
-    position: relative;
-    height: 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    /* The live ramp, sampled from flameColour() at build time — see script. */
-    background: var(--panel-raised);
-  }
-  #rampMark {
-    position: absolute; top: -3px; bottom: -3px; width: 2px;
-    background: var(--ink); border-radius: 1px;
-    transform: translateX(-1px);
-  }
-
-  .hint {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--ink-faint);
-  }
-
-  footer {
-    border-top: 1px solid var(--line-soft);
-    padding-top: 16px;
-    font-size: 12.5px;
-    color: var(--ink-faint);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  footer code {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    color: var(--ink-muted);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition-duration: 0.01ms !important; }
+    padding: 1px 5px;
   }
 </style>
 
-<div class="wrap">
+<div class="page">
   <header>
-    <h1>Bonfire Console</h1>
-    <p class="lede">
-      Tuning rig for Ratio's audio visualiser. The flame maths here is the shipping code,
-      compiled straight out of <code style="font-family:var(--mono);font-size:13px">src/visualiser</code> —
-      what you see is what the app will draw.
+    <h1>Notes or a Line</h1>
+    <p>
+      The same phrase three ways: as separate notes, as notes that overlap, and as one
+      unbroken pitch line that never stops moving. The question is whether the third is still
+      heard as a tune, or only as a siren that happens to pass through the right pitches.
     </p>
-    <div class="mapping">
-      <span><b>colour</b> ← spectral brightness (VIBGYOR: violet → red)</span>
-      <span><b>flame height</b> ← loudness</span>
-      <span><b>normalisation</b> ← per track, 5th–95th percentile</span>
-    </div>
   </header>
 
-  <div class="stage">
-    <span class="stage-note" id="stageNote">slow build</span>
-    <svg id="fire" viewBox="0 0 520 430" preserveAspectRatio="xMidYMax meet" aria-label="Bonfire visualiser preview"></svg>
+  <h2>Phrase</h2>
+  <textarea id="text" spellcheck="false" aria-label="Sargam phrase">S S P P D D P - | M M G G R R S -</textarea>
+
+  <div class="presets">
+    <button id="p1" data-phrase="S S P P D D P - | M M G G R R S -">Twinkle</button>
+    <button id="p2" data-phrase=".N S R | M R - | P M R S">Sarang pakad</button>
+    <button id="p3" data-phrase="S R G M P D N S' - | S' N D P M G R S -">Scale, up and down</button>
+    <button id="p4" data-phrase="S P .S P S' .P S - | G .N M D R S' S -">Wide leaps</button>
+    <button id="p5" data-phrase="S R S R S R S R | G M G M G M G M">Two-note rocking</button>
   </div>
 
-  <div class="console">
-    <section class="group">
-      <h2>Source</h2>
-
-      <div class="segmented" role="group" aria-label="Pseudo-track">
-        <button type="button" data-track="build" aria-pressed="true">Slow build</button>
-        <button type="button" data-track="bass" aria-pressed="false">Bass groove</button>
-        <button type="button" data-track="bright" aria-pressed="false">Bright &amp; sparse</button>
-      </div>
-
-      <div class="transport">
-        <button type="button" id="playBtn" aria-pressed="false">Play</button>
-        <button type="button" id="restartBtn">Restart</button>
-        <span class="clock" id="clock">0:00 / 0:45</span>
-      </div>
-
-      <canvas id="timeline" width="900" height="92" aria-label="Track loudness envelope; click to scrub"></canvas>
-
-      <p class="hint">
-        Synthetic tracks, generated with the same noise function the flames use. Click the
-        envelope to scrub.
-      </p>
-    </section>
-
-    <section class="group">
-      <h2>Drive</h2>
-
-      <div class="meter">
-        <div class="meter-head"><span>Amplitude</span><output id="ampOut">0.00</output></div>
-        <div class="meter-track"><div class="meter-fill" id="ampFill"></div></div>
-      </div>
-
-      <div class="meter">
-        <div class="meter-head"><span>Brightness</span><output id="briOut">0.00</output></div>
-        <div class="ramp" id="ramp"><div id="rampMark" style="left:0%"></div></div>
-      </div>
-
-      <div class="segmented">
-        <button type="button" id="manualBtn" aria-pressed="false">Manual override</button>
-      </div>
-
-      <div class="slider">
-        <div class="slider-head"><label for="mAmp">Amplitude</label><output id="mAmpOut">0.60</output></div>
-        <input type="range" id="mAmp" min="0" max="1" step="0.01" value="0.6" disabled>
-      </div>
-      <div class="slider">
-        <div class="slider-head"><label for="mBri">Brightness</label><output id="mBriOut">0.50</output></div>
-        <input type="range" id="mBri" min="0" max="1" step="0.01" value="0.5" disabled>
-      </div>
-
-      <p class="hint">
-        Override to park the fire at an extreme and check both ends of the ramp hold up.
-      </p>
-    </section>
-
-    <section class="group">
-      <h2>Form</h2>
-
-      <div id="formControls" class="form-controls"></div>
-    </section>
+  <div class="modes">
+    <button id="discrete" class="on">Discrete</button>
+    <button id="squashed">Squashed</button>
+    <button id="continuous">Continuous</button>
   </div>
 
-  <footer>
-    <span id="perf">—</span>
-    <span>
-      Running <code>flameOutline</code>, <code>toPathData</code>, <code>flameColour</code>,
-      <code>wobble</code>, <code>follow</code> and <code>buildTrackAnalysis</code> compiled
-      from the repo. Shape parameters here map one-to-one onto
-      <code>FlameShapeParams</code>.
-    </span>
-  </footer>
+  <div class="controls">
+    <button id="play" style="background: var(--accent); border-color: var(--accent); color: #fff;">Play</button>
+    <button id="stop">Stop</button>
+
+    <div class="field">
+      <label for="sa">Sa (Hz)</label>
+      <input type="number" id="sa" value="240" min="80" max="600" step="1">
+    </div>
+
+    <div class="field">
+      <label for="bpm">Beats / min</label>
+      <input type="number" id="bpm" value="100" min="20" max="400" step="5">
+    </div>
+
+    <div class="field">
+      <label for="overlap">Overlap %</label>
+      <input type="number" id="overlap" value="40" min="0" max="150" step="5">
+    </div>
+
+    <div class="field">
+      <label for="glide">Glide %</label>
+      <input type="number" id="glide" value="100" min="0" max="100" step="5">
+    </div>
+  </div>
+
+  <p class="hint" id="hint">Discrete — notes played separately.</p>
+
+  <h2>Pitch over time</h2>
+  <canvas id="contour" aria-label="The pitch of the phrase over time"></canvas>
+  <div class="errors" id="errors"></div>
+
+  <h2>Notation</h2>
+  <ul class="legend">
+    <li><code>S R G M P D N</code> shuddha, <code>r g d n</code> komal, <code>M#</code> tivra Ma</li>
+    <li><code>.P</code> an octave down, <code>S'</code> an octave up, <code>-</code> hold, <code>_</code> rest</li>
+  </ul>
+
+  <p class="note" style="margin-top:18px">
+    Glide is how much of the time between two notes is spent moving rather than resting. At
+    100 the line never stops; lower it and each note is held before travelling, which is
+    roughly what meend does.
+  </p>
 </div>
 
 <script>
@@ -1680,453 +1518,446 @@ function clamp(value, low, high) {
 }
 
 return exports; })();
-var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
+__m['glide'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.glideCurve = glideCurve;
+exports.largestStepCents = largestStepCents;
+function monotoneTangents(xs, ys) {
+    const count = xs.length;
+    if (count < 2)
+        return new Array(count).fill(0);
+    const secants = [];
+    for (let i = 0; i < count - 1; i += 1) {
+        const run = xs[i + 1] - xs[i];
+        secants.push(run === 0 ? 0 : (ys[i + 1] - ys[i]) / run);
+    }
+    const tangents = new Array(count);
+    tangents[0] = secants[0];
+    tangents[count - 1] = secants[count - 2];
+    for (let i = 1; i < count - 1; i += 1) {
+        tangents[i] =
+            secants[i - 1] * secants[i] <= 0 ? 0 : (secants[i - 1] + secants[i]) / 2;
+    }
+    for (let i = 0; i < count - 1; i += 1) {
+        if (secants[i] === 0) {
+            tangents[i] = 0;
+            tangents[i + 1] = 0;
+            continue;
+        }
+        const alpha = tangents[i] / secants[i];
+        const beta = tangents[i + 1] / secants[i];
+        const size = alpha * alpha + beta * beta;
+        if (size > 9) {
+            const scale = 3 / Math.sqrt(size);
+            tangents[i] = scale * alpha * secants[i];
+            tangents[i + 1] = scale * beta * secants[i];
+        }
+    }
+    return tangents;
+}
+function hermite(t, from, to, fromTangent, toTangent, run) {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return ((2 * t3 - 3 * t2 + 1) * from +
+        (t3 - 2 * t2 + t) * run * fromTangent +
+        (-2 * t3 + 3 * t2) * to +
+        (t3 - t2) * run * toTangent);
+}
+function glideCurve(options) {
+    const { nodes, samplesPerBeat } = options;
+    const glide = Number.isFinite(options.glide)
+        ? Math.min(1, Math.max(0, options.glide))
+        : 1;
+    const usable = nodes.filter((n) => Number.isFinite(n.hz) && n.hz > 0 && n.beats > 0);
+    if (usable.length === 0 || !(samplesPerBeat > 0))
+        return new Float32Array(0);
+    const totalBeats = usable.reduce((sum, n) => sum + n.beats, 0);
+    const count = Math.max(1, Math.round(totalBeats * samplesPerBeat));
+    const centres = [];
+    const pitches = [];
+    let cursor = 0;
+    for (const node of usable) {
+        centres.push(cursor + node.beats / 2);
+        pitches.push(Math.log2(node.hz));
+        cursor += node.beats;
+    }
+    const tangents = monotoneTangents(centres, pitches);
+    const out = new Float32Array(count);
+    let node = 0;
+    for (let i = 0; i < count; i += 1) {
+        const beat = (i / count) * totalBeats;
+        if (beat <= centres[0]) {
+            out[i] = Math.pow(2, pitches[0]);
+            continue;
+        }
+        if (beat >= centres[centres.length - 1]) {
+            out[i] = Math.pow(2, pitches[pitches.length - 1]);
+            continue;
+        }
+        while (node < centres.length - 2 && beat > centres[node + 1])
+            node += 1;
+        const from = centres[node];
+        const to = centres[node + 1];
+        const run = to - from;
+        const across = run === 0 ? 1 : (beat - from) / run;
+        let t;
+        if (glide <= 0) {
+            t = across < 1 ? 0 : 1;
+        }
+        else if (glide >= 1) {
+            t = across;
+        }
+        else {
+            const edge = (1 - glide) / 2;
+            t = Math.min(1, Math.max(0, (across - edge) / glide));
+        }
+        out[i] = Math.pow(2, hermite(t, pitches[node], pitches[node + 1], tangents[node], tangents[node + 1], run));
+    }
+    return out;
+}
+function largestStepCents(curve) {
+    let worst = 0;
+    for (let i = 1; i < curve.length; i += 1) {
+        if (!(curve[i] > 0) || !(curve[i - 1] > 0))
+            continue;
+        worst = Math.max(worst, Math.abs(1200 * Math.log2(curve[i] / curve[i - 1])));
+    }
+    return worst;
+}
+
+return exports; })();
+var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule'], __m['glide']);
 </script>
 
 <script>
 (function () {
   'use strict';
 
-  var svgNS = 'http://www.w3.org/2000/svg';
-  var fire = document.getElementById('fire');
-  var VIEW_W = 520, VIEW_H = 430, BASE_Y = 338;
+  var S = RATIO;
+  var el = function (id) { return document.getElementById(id); };
+  var setText = function (id, text) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = text;
+  };
 
-  // ---- scene scaffolding ---------------------------------------------------
-  // Draw order is the whole difference between a bonfire and floating shapes: the wood goes
-  // down first, the flames on top of it. Flame bases sit slightly *inside* the log pile so
-  // the fire looks like it is coming off the wood rather than hovering above it.
-  var logGroup = document.createElementNS(svgNS, 'g');
-  fire.appendChild(logGroup);
+  var mode = 'discrete';
+  var audio = null;
+  var master = null;
+  var voices = [];
 
-  // The glow is a gradient, not a flat shape. A solid ellipse has a rim — a visible line
-  // where the light stops — which no light source has. Fading opacity to zero at the edge
-  // means the halo has no boundary at all, only a falloff.
-  var defs = document.createElementNS(svgNS, 'defs');
-  fire.appendChild(defs);
+  function context() {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      master = audio.createGain();
+      master.gain.setValueAtTime(1, 0);
+      master.connect(audio.destination);
+    }
+    if (audio.state === 'suspended') audio.resume();
+    return audio;
+  }
 
-  var glowGradient = document.createElementNS(svgNS, 'radialGradient');
-  glowGradient.setAttribute('id', 'glowGradient');
-  defs.appendChild(glowGradient);
+  function settings() {
+    var number = function (id, fallback) {
+      var value = Number(el(id).value);
+      return Number.isFinite(value) ? value : fallback;
+    };
+    return {
+      sa: Math.max(1, number('sa', 240)),
+      bpm: Math.max(1, number('bpm', 100)),
+      overlap: Math.max(0, number('overlap', 40) / 100),
+      glide: Math.min(1, Math.max(0, number('glide', 100) / 100))
+    };
+  }
 
-  // Four stops rather than two: a linear falloff still reads as a disc, because the eye picks
-  // up the constant gradient. Weighting the fade toward the centre gives a soft core that
-  // thins out long before it ends.
-  var glowStops = [
-    { at: '0%', weight: 0.44 },
-    { at: '30%', weight: 0.26 },
-    { at: '62%', weight: 0.09 },
-    { at: '100%', weight: 0 }
-  ].map(function (spec) {
-    var stop = document.createElementNS(svgNS, 'stop');
-    stop.setAttribute('offset', spec.at);
-    glowGradient.appendChild(stop);
-    return { el: stop, weight: spec.weight };
-  });
+  function parse() {
+    return S.parseSargam(el('text').value);
+  }
 
-  var glow = document.createElementNS(svgNS, 'ellipse');
-  glow.setAttribute('cx', VIEW_W / 2);
-  glow.setAttribute('cy', BASE_Y + 14);
-  glow.setAttribute('fill', 'url(#glowGradient)');
-  fire.appendChild(glow);
-
-  var tongueGroup = document.createElementNS(svgNS, 'g');
-  fire.appendChild(tongueGroup);
-
-  var sparkGroup = document.createElementNS(svgNS, 'g');
-  fire.appendChild(sparkGroup);
-
-  // Four browns rather than one: a stack of identical logs reads as a single shape, and the
-  // variation is what separates them without needing an outline.
-  var LOGS = [
-    { x: -62, y: -3, w: 124, h: 9, r: -9, fill: '#33200F' },
-    { x: -26, y: 5, w: 107, h: 8, r: 8, fill: '#28190C' },
-    { x: -75, y: 8, w: 88, h: 8, r: 4, fill: '#3A2513' },
-    { x: -42, y: 15, w: 95, h: 7, r: -3, fill: '#221408' }
-  ];
-  LOGS.forEach(function (log) {
-    var rect = document.createElementNS(svgNS, 'rect');
-    rect.setAttribute('x', VIEW_W / 2 + log.x);
-    rect.setAttribute('y', BASE_Y + log.y);
-    rect.setAttribute('width', log.w);
-    rect.setAttribute('height', log.h);
-    rect.setAttribute('rx', log.h / 2);
-    rect.setAttribute('transform', 'rotate(' + log.r + ' ' + (VIEW_W / 2 + log.x + log.w / 2) + ' ' + (BASE_Y + log.y + log.h / 2) + ')');
-    // Painted once. The wood does not change colour with the music — the glow above it does
-    // that, and washing the logs directly as well made them read as lit plastic.
-    rect.setAttribute('fill', log.fill);
-    logGroup.appendChild(rect);
-  });
-
-  // ---- tongues -------------------------------------------------------------
-  var tongues = [], paths = [], levels = [];
-
-  function buildTongues(count, layers) {
-    tongueGroup.textContent = '';
-    // Position, resting height, gain and surge rhythm all come from the shared module, so the
-    // preview and the app lay out the same fire.
-    tongues = RATIO.makeTongues(count);
-    // Each tongue follows loudness on its own clock, so this is per-tongue state.
-    levels = tongues.map(function () { return 0; });
-    paths = [];
-
-    for (var i = 0; i < tongues.length; i++) {
-      var perTongue = [];
-      // Outermost first so the core paints on top.
-      for (var l = 0; l < layers; l++) {
-        var p = document.createElementNS(svgNS, 'path');
-        tongueGroup.appendChild(p);
-        perTongue.push(p);
+  /** The notes as pitches and beats, which is what both the line and the bars are drawn from. */
+  function nodesOf(result, config) {
+    var nodes = [];
+    result.events.forEach(function (event) {
+      if (event.kind === 'note') {
+        nodes.push({
+          hz: S.frequency(event.swara, event.octave, config.sa, 'just'),
+          beats: event.beats
+        });
+      } else if (nodes.length) {
+        // A rest cannot be glided through, so it lengthens the note before it rather than
+        // dragging the line towards a pitch that was never written.
+        nodes[nodes.length - 1].beats += event.beats;
       }
-      paths.push(perTongue);
-    }
+    });
+    return nodes;
   }
 
-  var SPARK_COUNT = 26;
-  var sparks = [];
-  for (var s = 0; s < SPARK_COUNT; s++) {
-    var c = document.createElementNS(svgNS, 'circle');
-    sparkGroup.appendChild(c);
-    sparks.push({ el: c, seed: 40 + s * 3.3, offset: (s / SPARK_COUNT) });
+  /* -------------------------------------------------------------------- play */
+
+  function stop() {
+    voices.forEach(function (osc) { try { osc.stop(); } catch (e) {} });
+    voices = [];
   }
 
-  // ---- pseudo-tracks -------------------------------------------------------
-  var HOP_MS = 50, DURATION_S = 45;
+  /** One plucked note, for the two discrete modes. */
+  function pluck(ctx, hz, at, seconds, gain, release) {
+    var fade = Math.min(Math.max(0.03, release), seconds * 0.5);
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, at);
+    out.gain.linearRampToValueAtTime(gain, at + 0.015);
+    out.gain.setValueAtTime(gain, at + seconds - fade);
+    out.gain.linearRampToValueAtTime(0.0001, at + seconds);
+    out.connect(master);
 
-  function makeTrack(kind) {
-    var n = Math.round((DURATION_S * 1000) / HOP_MS);
-    var rms = [], centroidHz = [];
-
-    for (var i = 0; i < n; i++) {
-      var t = (i * HOP_MS) / 1000;
-      var prog = i / n;
-      var level, cent;
-
-      if (kind === 'bass') {
-        var kick = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 1.75)), 8);
-        level = 0.085 * (0.4 + 0.8 * kick) * (0.9 + 0.2 * RATIO.wobble(5, t * 1.3));
-        cent = 210 + 190 * kick + 80 * RATIO.wobble(11, t * 1.1);
-      } else if (kind === 'bright') {
-        var hit = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 3.1)), 12);
-        level = 0.045 * (0.16 + 1.2 * hit) * (0.9 + 0.25 * RATIO.wobble(2, t * 2.2));
-        cent = 2500 + 3400 * hit + 800 * RATIO.wobble(8, t * 1.7);
-      } else {
-        // Starts near the noise floor and grows — the case that proves per-track
-        // normalisation, because an absolute window would leave the first half dead.
-        var beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 2)), 6);
-        level = (0.003 + 0.15 * Math.pow(prog, 1.7)) * (0.45 + 0.6 * beat) * (0.85 + 0.3 * RATIO.wobble(9, t * 0.7));
-        cent = 320 + 2500 * Math.pow(prog, 1.4) + 380 * RATIO.wobble(3, t * 0.9);
-      }
-
-      rms.push(Math.max(0, level));
-      centroidHz.push(Math.max(0, cent));
-    }
-
-    return RATIO.buildTrackAnalysis({ sampleRate: 16000, hopMs: HOP_MS, rms: rms, centroidHz: centroidHz });
+    [[1, 1], [2, 0.16], [3, 0.07]].forEach(function (pair) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(hz * pair[0], at);
+      level.gain.setValueAtTime(pair[1], at);
+      osc.connect(level).connect(out);
+      osc.start(at);
+      osc.stop(at + seconds + 0.05);
+      voices.push(osc);
+    });
   }
 
-  var tracks = { build: makeTrack('build'), bass: makeTrack('bass'), bright: makeTrack('bright') };
-  var currentKind = 'build';
-  var analysis = tracks.build;
+  /**
+   * One voice that never stops, following the pitch line.
+   *
+   * Sampled at 125 points a beat. Not arbitrary: at a low glide the movement is squeezed into
+   * a fraction of the gap and the line becomes steep, and a coarser curve steps by more than
+   * two semitones at a time, which the ear hears as a zipper rather than a slide.
+   */
+  function playLine(ctx, curve, start, seconds) {
+    var out = ctx.createGain();
+    out.gain.setValueAtTime(0, start);
+    out.gain.linearRampToValueAtTime(0.22, start + 0.08);
+    out.gain.setValueAtTime(0.22, start + seconds - 0.15);
+    out.gain.linearRampToValueAtTime(0.0001, start + seconds);
+    out.connect(master);
 
-  // ---- state ---------------------------------------------------------------
-  var playing = false, manual = false;
-  var playhead = 0;          // seconds
-  var smoothAmp = 0, smoothBri = 0;
-  var lastFrame = 0, frames = 0, fpsAccum = 0, fpsTimer = 0;
+    [[1, 1], [2, 0.16], [3, 0.07]].forEach(function (pair) {
+      var osc = ctx.createOscillator();
+      var level = ctx.createGain();
+      osc.type = 'sine';
 
-  // Defaults, ranges and step grids all come from src/visualiser/flameSettings.ts,
-  // so the console cannot drift from the app.
-  var form = Object.assign({}, RATIO.DEFAULT_FLAME_SETTINGS);
+      var scaled = new Float32Array(curve.length);
+      for (var i = 0; i < curve.length; i += 1) scaled[i] = curve[i] * pair[0];
+      osc.frequency.setValueCurveAtTime(scaled, start, seconds);
 
-  buildTongues(form.tongues, form.layers);
-
-  // ---- colour ramp strip ---------------------------------------------------
-  (function paintRamp() {
-    var stops = [];
-    for (var i = 0; i <= 10; i++) {
-      var col = RATIO.flameColour(i / 10);
-      stops.push('rgb(' + col.r + ',' + col.g + ',' + col.b + ') ' + (i * 10) + '%');
-    }
-    document.getElementById('ramp').style.background =
-      'linear-gradient(90deg, ' + stops.join(', ') + ')';
-  })();
-
-  // ---- timeline ------------------------------------------------------------
-  var timeline = document.getElementById('timeline');
-  var tctx = timeline.getContext('2d');
-
-  function drawTimeline() {
-    var w = timeline.width, h = timeline.height;
-    tctx.clearRect(0, 0, w, h);
-
-    var amp = analysis.amplitude, bri = analysis.brightness;
-    var n = amp.length;
-    if (!n) return;
-
-    for (var x = 0; x < w; x++) {
-      var idx = Math.min(n - 1, Math.floor((x / w) * n));
-      var a = amp[idx];
-      var col = RATIO.flameColour(bri[idx]);
-      var barH = Math.max(1, a * (h - 6));
-      tctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.72)';
-      tctx.fillRect(x, h - barH, 1, barH);
-    }
-
-    var px = (playhead / DURATION_S) * w;
-    tctx.fillStyle = '#F2F2F7';
-    tctx.fillRect(px - 1, 0, 2, h);
+      level.gain.setValueAtTime(pair[1], start);
+      osc.connect(level).connect(out);
+      osc.start(start);
+      osc.stop(start + seconds + 0.05);
+      voices.push(osc);
+    });
   }
 
-  timeline.addEventListener('click', function (event) {
-    var rect = timeline.getBoundingClientRect();
-    playhead = Math.max(0, Math.min(DURATION_S, ((event.clientX - rect.left) / rect.width) * DURATION_S));
-    drawTimeline();
-  });
+  function play() {
+    stop();
+    var ctx = context();
+    var config = settings();
+    var result = parse();
+    var beat = 60 / config.bpm;
+    var start = ctx.currentTime + 0.08;
 
-  // ---- render --------------------------------------------------------------
-  function render(now) {
-    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 0.016;
-    lastFrame = now;
+    if (mode === 'continuous') {
+      var nodes = nodesOf(result, config);
+      if (!nodes.length) return;
 
-    if (playing && !manual) {
-      playhead += dt;
-      if (playhead >= DURATION_S) playhead = 0;
-    }
+      var curve = S.glideCurve({ nodes: nodes, samplesPerBeat: 125, glide: config.glide });
+      var beats = 0;
+      nodes.forEach(function (node) { beats += node.beats; });
+      playLine(ctx, curve, start, beats * beat);
 
-    var target;
-    if (manual) {
-      target = {
-        amplitude: parseFloat(document.getElementById('mAmp').value),
-        brightness: parseFloat(document.getElementById('mBri').value)
-      };
-    } else {
-      target = RATIO.sampleAnalysis(analysis, playhead);
-    }
-
-    // The real envelope follower: fast attack, slow release.
-    smoothAmp = RATIO.follow(smoothAmp, target.amplitude, RATIO.FLAME_RATES);
-    smoothBri = RATIO.follow(smoothBri, target.brightness, RATIO.COLOUR_RATES);
-
-    var t = now / 1000;
-    var colour = RATIO.flameColour(smoothBri);
-    var rgb = colour.r + ',' + colour.g + ',' + colour.b;
-
-    // Only used for the glow and sparks — the flames themselves are driven per tongue.
-    var energy = 0.18 + 0.82 * smoothAmp;
-
-    for (var i = 0; i < tongues.length; i++) {
-      var tongue = tongues[i];
-      var layers = paths[i];
-
-      // Each tongue follows the *raw* loudness with its own attack and release, so a beat
-      // reaches them at different moments — not the globally smoothed value, which would have
-      // already flattened that timing out.
-      levels[i] = RATIO.follow(levels[i], target.amplitude, tongue);
-      var reach = RATIO.tongueEnergy(tongue, t, levels[i]);
-      var spread = RATIO.tongueSpread(reach);
-
-      for (var l = 0; l < layers.length; l++) {
-        // Layer 0 is the outermost halo, the last is the hot core.
-        var depth = layers.length === 1 ? 1 : l / (layers.length - 1);
-        var scale = 1.24 - 0.24 * depth;
-
-        // form.height is a *peak* budget: dividing by the ceiling and the halo scale means the
-        // tallest tongue at full loudness lands on form.height and never above it.
-        var heightUnit = form.height / (RATIO.MAX_REACH * 1.24);
-
-        var d = RATIO.toPathData(RATIO.flameOutline({
-          seed: tongue.seed + l * 0.31,
-          time: t,
-          centreX: VIEW_W / 2 + tongue.offset * form.width * 1.45,
-          baseY: BASE_Y,
-          height: heightUnit * tongue.restHeight * reach * scale,
-          width: form.width * tongue.restWidth * spread * scale,
-          // Sway grows with how hard this tongue is burning, not with the whole fire.
-          sway: form.sway * (0.45 + 0.75 * Math.min(1.4, reach)),
-          flutter: form.flutter,
-          tipSharpness: form.tipSharpness,
-          segments: form.segments
-        }));
-
-        var el = layers[l];
-        el.setAttribute('d', d);
-        // Every layer, the ground glow, the sparks and the lit log edges all take the *same*
-        // colour. Layers used to be offset along the ramp to fake a hotter core, which was
-        // invisible on a two-stop ramp but is a whole hue apart on a spectral one — at low
-        // brightness the glow sat on green while the cores sat on blue.
-        //
-        // Depth now comes from opacity and size alone: three translucent copies stacked over
-        // one another already build a brighter, denser centre, without inventing a colour that
-        // disagrees with everything around it.
-        el.setAttribute('fill', 'rgb(' + rgb + ')');
-        el.setAttribute('fill-opacity', (0.16 + 0.42 * depth).toFixed(3));
-      }
-    }
-
-    // Ground glow — the light the fire throws onto what it is standing on. Sized from the
-    // fire's own dimensions plus a constant, so it stays a broad wash even when the tongues
-    // are set narrow, and it reaches well past them because light does.
-    var glowBreath = 0.72 + 0.5 * energy;
-    glow.setAttribute('rx', ((130 + form.width * 2.2) * glowBreath).toFixed(1));
-    glow.setAttribute('ry', ((64 + form.height * 0.16) * glowBreath).toFixed(1));
-
-    for (var g = 0; g < glowStops.length; g++) {
-      glowStops[g].el.setAttribute('stop-color', 'rgb(' + rgb + ')');
-      glowStops[g].el.setAttribute(
-        'stop-opacity',
-        (glowStops[g].weight * (0.34 + 0.86 * smoothAmp)).toFixed(3)
+      setText(
+        'hint',
+        'Continuous — one voice, ' + nodes.length + ' turning points, steepest step ' +
+          S.largestStepCents(curve).toFixed(0) + ' cents, never silent'
       );
+      draw();
+      return;
     }
 
-    for (var k = 0; k < sparks.length; k++) {
-      var spark = sparks[k];
-      // Each spark loops on its own schedule so they do not pulse in unison.
-      var life = (t * (0.22 + 0.16 * (k % 5)) + spark.offset) % 1;
-      var rise = Math.pow(life, 0.85);
-      var x = VIEW_W / 2 + RATIO.wobble(spark.seed, t * 0.7 + life * 3) * form.width * 1.9;
-      var y = BASE_Y - rise * (form.height * 1.35) * energy;
-      spark.el.setAttribute('cx', x.toFixed(1));
-      spark.el.setAttribute('cy', y.toFixed(1));
-      spark.el.setAttribute('r', (0.7 + 1.5 * (1 - rise) * energy).toFixed(2));
-      spark.el.setAttribute('fill', 'rgb(' + rgb + ')');
-      spark.el.setAttribute('fill-opacity', ((1 - rise) * 0.65 * energy).toFixed(3));
-    }
+    var overlap = mode === 'squashed' ? config.overlap : 0;
+    var notes = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: overlap,
+      articulation: 0.03
+    });
 
-    // ---- readouts ----
-    document.getElementById('ampOut').textContent = smoothAmp.toFixed(2);
-    document.getElementById('briOut').textContent = smoothBri.toFixed(2);
-    document.getElementById('ampFill').style.width = (smoothAmp * 100).toFixed(1) + '%';
-    document.getElementById('rampMark').style.left = (smoothBri * 100).toFixed(1) + '%';
-    document.getElementById('clock').textContent =
-      formatTime(playhead) + ' / ' + formatTime(DURATION_S);
+    var pairs = S.overlappingPairs(notes);
+    notes.forEach(function (note) {
+      var swara = S.SWARAS[((note.semitones % 12) + 12) % 12];
+      var octave = Math.floor(note.semitones / 12);
+      var hz = S.frequency(swara, octave, config.sa, 'just');
+      pluck(ctx, hz, start + note.at, note.seconds, pairs > 0 ? 0.16 : 0.22, overlap > 0 ? 0.04 : 0.09);
+    });
 
-    frames++;
-    fpsAccum += dt;
-    if (fpsAccum >= 0.5) {
-      var fps = frames / fpsAccum;
-      var pathCount = tongues.length * form.layers;
-      var headroom = BASE_Y - form.height;
-      document.getElementById('perf').textContent =
-        fps.toFixed(0) + ' fps · ' + pathCount + ' paths · ' +
-        (pathCount * (form.segments * 2 + 1)) + ' curve points per frame · ' +
-        'peak ' + form.height + 'px, ' + headroom.toFixed(0) + 'px headroom' +
-        (headroom < 0 ? '  ⚠ OVER STAGE' : '');
-      frames = 0; fpsAccum = 0;
-    }
-
-    if (playing && !manual) drawTimeline();
-    requestAnimationFrame(render);
+    setText(
+      'hint',
+      mode === 'squashed'
+        ? 'Squashed — ' + pairs + ' of ' + Math.max(0, notes.length - 1) + ' pairs sounding together'
+        : 'Discrete — notes played separately.'
+    );
+    draw();
   }
 
-  function formatTime(seconds) {
-    var m = Math.floor(seconds / 60);
-    var s = Math.floor(seconds % 60);
-    return m + ':' + (s < 10 ? '0' : '') + s;
+  /* ----------------------------------------------------------------- drawing */
+
+  function surface() {
+    var canvas = el('contour');
+    var ratio = window.devicePixelRatio || 1;
+    var width = canvas.clientWidth;
+    var height = canvas.clientHeight;
+
+    if (canvas.width !== Math.round(width * ratio)) canvas.width = Math.round(width * ratio);
+    if (canvas.height !== Math.round(height * ratio)) canvas.height = Math.round(height * ratio);
+
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    return { ctx: ctx, width: width, height: height };
   }
 
-  // ---- wiring --------------------------------------------------------------
-  document.querySelectorAll('[data-track]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      currentKind = btn.getAttribute('data-track');
-      analysis = tracks[currentKind];
-      playhead = 0;
-      document.querySelectorAll('[data-track]').forEach(function (other) {
-        other.setAttribute('aria-pressed', String(other === btn));
-      });
-      document.getElementById('stageNote').textContent = btn.textContent.toLowerCase();
-      drawTimeline();
+  /**
+   * The same phrase drawn the way the chosen mode plays it.
+   *
+   * Bars for the discrete modes, overlapping where they overlap; an unbroken line for the
+   * continuous one. Seeing the two against each other is half the answer — the line visits
+   * every pitch the bars do and spends almost none of its time on any of them.
+   */
+  function draw() {
+    var surf = surface();
+    var ctx = surf.ctx;
+    var config = settings();
+    var result = parse();
+    var beat = 60 / config.bpm;
+
+    setText('errors', result.errors.length
+      ? result.errors.map(function (e) { return 'beat ' + (e.token + 1) + ': ' + e.text; }).join('   ')
+      : '');
+
+    var nodes = nodesOf(result, config);
+    if (!nodes.length) return;
+
+    var beats = 0;
+    nodes.forEach(function (node) { beats += node.beats; });
+
+    var pitches = nodes.map(function (node) { return Math.log2(node.hz); });
+    var low = Math.min.apply(null, pitches);
+    var high = Math.max.apply(null, pitches);
+    var pad = Math.max(0.1, (high - low) * 0.16);
+    low -= pad;
+    high += pad;
+
+    var padX = 12;
+    var innerW = surf.width - padX * 2;
+    var xAt = function (b) { return padX + (b / Math.max(1, beats)) * innerW; };
+    var yAt = function (p) { return surf.height - 16 - ((p - low) / (high - low)) * (surf.height - 32); };
+
+    // Sa wherever it falls, so the shape can be read against the tonic.
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    for (var octave = -3; octave <= 3; octave += 1) {
+      var line = Math.log2(config.sa * Math.pow(2, octave));
+      if (line < low || line > high) continue;
+      var y = yAt(line);
+      ctx.strokeStyle = '#2E2A45';
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(surf.width - padX, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#6A6878';
+      ctx.fillText(octave === 0 ? 'Sa' : octave > 0 ? 'Sa+' + octave : 'Sa-' + -octave, 2, y - 2);
+    }
+
+    if (mode === 'continuous') {
+      var curve = S.glideCurve({ nodes: nodes, samplesPerBeat: 125, glide: config.glide });
+      ctx.strokeStyle = '#FFD27A';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (var i = 0; i < curve.length; i += 1) {
+        var x = padX + (i / (curve.length - 1)) * innerW;
+        var yy = yAt(Math.log2(curve[i]));
+        if (i === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+      return;
+    }
+
+    var overlap = mode === 'squashed' ? config.overlap : 0;
+    var laid = S.schedulePhrase(result.events, {
+      beatSeconds: beat,
+      overlap: overlap,
+      articulation: 0.03
+    });
+
+    ctx.strokeStyle = 'rgba(124, 92, 255, 0.75)';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'butt';
+
+    laid.forEach(function (note) {
+      var event = result.events[note.index];
+      if (!event || event.kind !== 'note') return;
+      var yy = yAt(Math.log2(S.frequency(event.swara, event.octave, config.sa, 'just')));
+      ctx.beginPath();
+      ctx.moveTo(xAt(note.at / beat), yy);
+      ctx.lineTo(xAt((note.at + note.seconds) / beat), yy);
+      ctx.stroke();
+    });
+  }
+
+  /* ---------------------------------------------------------------- controls */
+
+  function choose(next) {
+    mode = next;
+    ['discrete', 'squashed', 'continuous'].forEach(function (id) {
+      el(id).className = id === next ? 'on' : '';
+    });
+    setText(
+      'hint',
+      next === 'discrete'
+        ? 'Discrete — notes played separately.'
+        : next === 'squashed'
+          ? 'Squashed — each note runs into the next.'
+          : 'Continuous — one voice that never stops moving.'
+    );
+    draw();
+    play();
+  }
+
+  el('discrete').addEventListener('click', function () { choose('discrete'); });
+  el('squashed').addEventListener('click', function () { choose('squashed'); });
+  el('continuous').addEventListener('click', function () { choose('continuous'); });
+
+  el('play').addEventListener('click', play);
+  el('stop').addEventListener('click', stop);
+
+  el('text').addEventListener('input', draw);
+  ['sa', 'bpm', 'overlap', 'glide'].forEach(function (id) {
+    el(id).addEventListener('input', draw);
+  });
+
+  ['p1', 'p2', 'p3', 'p4', 'p5'].forEach(function (id) {
+    el(id).addEventListener('click', function () {
+      el('text').value = this.dataset.phrase;
+      draw();
+      play();
     });
   });
 
-  var playBtn = document.getElementById('playBtn');
-  playBtn.addEventListener('click', function () {
-    playing = !playing;
-    playBtn.textContent = playing ? 'Pause' : 'Play';
-    playBtn.setAttribute('aria-pressed', String(playing));
-  });
-
-  document.getElementById('restartBtn').addEventListener('click', function () {
-    playhead = 0;
-    drawTimeline();
-  });
-
-  var manualBtn = document.getElementById('manualBtn');
-  manualBtn.addEventListener('click', function () {
-    manual = !manual;
-    manualBtn.setAttribute('aria-pressed', String(manual));
-    document.getElementById('mAmp').disabled = !manual;
-    document.getElementById('mBri').disabled = !manual;
-  });
-
-  function bind(id, outId, key, format) {
-    var input = document.getElementById(id);
-    var out = document.getElementById(outId);
-    function sync() {
-      var value = parseFloat(input.value);
-      if (key) form[key] = value;
-      out.textContent = format ? format(value) : String(value);
-      if (key === 'tongues' || key === 'layers') {
-        buildTongues(form.tongues, form.layers);
-      }
+  el('text').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      play();
     }
-    input.addEventListener('input', sync);
-    sync();
-  }
-
-  // One slider per declared setting, in the order the module lists them.
-  var formHost = document.getElementById('formControls');
-
-  RATIO.FLAME_SETTING_RANGES.forEach(function (range) {
-    var wrap = document.createElement('div');
-    wrap.className = 'slider';
-
-    var head = document.createElement('div');
-    head.className = 'slider-head';
-
-    var label = document.createElement('label');
-    label.setAttribute('for', 'set-' + range.key);
-    label.textContent = range.label;
-
-    var out = document.createElement('output');
-    head.appendChild(label);
-    head.appendChild(out);
-
-    var input = document.createElement('input');
-    input.type = 'range';
-    input.id = 'set-' + range.key;
-    input.min = range.min;
-    input.max = range.max;
-    input.step = range.step;
-    input.value = form[range.key];
-
-    function sync() {
-      // Through the same clamp the app uses, so what the console shows is reachable there.
-      var value = RATIO.clampSetting(range.key, parseFloat(input.value));
-      form[range.key] = value;
-      out.textContent = value.toFixed(range.decimals);
-      if (range.key === 'tongues' || range.key === 'layers') {
-        buildTongues(form.tongues, form.layers);
-      }
-    }
-
-    input.addEventListener('input', sync);
-    wrap.appendChild(head);
-    wrap.appendChild(input);
-    formHost.appendChild(wrap);
-    sync();
   });
-  bind('mAmp', 'mAmpOut', null, function (v) { return v.toFixed(2); });
-  bind('mBri', 'mBriOut', null, function (v) { return v.toFixed(2); });
 
-  // Motion is the content here, so it is not started automatically for anyone who has asked
-  // the system to reduce it — they can press Play.
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    playing = true;
-    playBtn.textContent = 'Pause';
-    playBtn.setAttribute('aria-pressed', 'true');
-  }
-
-  drawTimeline();
-  requestAnimationFrame(render);
+  window.addEventListener('resize', draw);
+  draw();
 })();
 </script>

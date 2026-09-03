@@ -876,7 +876,587 @@ function isShooting(time) {
 }
 
 return exports; })();
-var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField']);
+__m['swara'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SWARAS = void 0;
+exports.parseSargam = parseSargam;
+exports.frequency = frequency;
+exports.justVersusEqual = justVersusEqual;
+exports.toSargam = toSargam;
+exports.totalBeats = totalBeats;
+exports.SWARAS = [
+    { name: 'S', spoken: 'Sa', semitone: 0, ratio: 1 },
+    { name: 'r', spoken: 'komal Re', semitone: 1, ratio: 16 / 15 },
+    { name: 'R', spoken: 'Re', semitone: 2, ratio: 9 / 8 },
+    { name: 'g', spoken: 'komal Ga', semitone: 3, ratio: 6 / 5 },
+    { name: 'G', spoken: 'Ga', semitone: 4, ratio: 5 / 4 },
+    { name: 'M', spoken: 'Ma', semitone: 5, ratio: 4 / 3 },
+    { name: 'M#', spoken: 'tivra Ma', semitone: 6, ratio: 45 / 32 },
+    { name: 'P', spoken: 'Pa', semitone: 7, ratio: 3 / 2 },
+    { name: 'd', spoken: 'komal Dha', semitone: 8, ratio: 8 / 5 },
+    { name: 'D', spoken: 'Dha', semitone: 9, ratio: 5 / 3 },
+    { name: 'n', spoken: 'komal Ni', semitone: 10, ratio: 16 / 9 },
+    { name: 'N', spoken: 'Ni', semitone: 11, ratio: 15 / 8 },
+];
+const BY_NAME = new Map(exports.SWARAS.map((s) => [s.name, s]));
+const ALIASES = { m: 'M#', "M'": 'M#' };
+function parseSargam(text) {
+    const events = [];
+    const errors = [];
+    const tokens = text
+        .replace(/\|/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean);
+    tokens.forEach((raw, index) => {
+        if (raw === '-') {
+            const last = events[events.length - 1];
+            if (!last) {
+                errors.push({ text: raw, token: index, reason: 'nothing to hold' });
+                return;
+            }
+            last.beats += 1;
+            return;
+        }
+        if (raw === '_') {
+            events.push({ kind: 'rest', beats: 1, token: index });
+            return;
+        }
+        let body = raw;
+        let octave = 0;
+        while (body.startsWith('.')) {
+            octave -= 1;
+            body = body.slice(1);
+        }
+        while (body.endsWith("'") && body !== "M'") {
+            octave += 1;
+            body = body.slice(0, -1);
+        }
+        const name = ALIASES[body] ?? body;
+        const swara = BY_NAME.get(name);
+        if (!swara) {
+            errors.push({ text: raw, token: index, reason: `not a swara` });
+            return;
+        }
+        events.push({ kind: 'note', swara, octave, beats: 1, token: index });
+    });
+    return { events, errors };
+}
+function frequency(swara, octave, sa, tuning = 'equal') {
+    if (!(sa > 0) || !Number.isFinite(octave))
+        return 0;
+    const base = tuning === 'just' ? sa * swara.ratio : sa * Math.pow(2, swara.semitone / 12);
+    return base * Math.pow(2, octave);
+}
+function justVersusEqual(swara) {
+    const cents = 1200 * Math.log2(swara.ratio);
+    return cents - swara.semitone * 100;
+}
+function toSargam(semitones) {
+    if (!Number.isFinite(semitones))
+        return 'S';
+    const rounded = Math.round(semitones);
+    const octave = Math.floor(rounded / 12);
+    const within = ((rounded % 12) + 12) % 12;
+    const swara = exports.SWARAS[within];
+    const below = octave < 0 ? '.'.repeat(-octave) : '';
+    const above = octave > 0 ? "'".repeat(octave) : '';
+    return below + swara.name + above;
+}
+function totalBeats(events) {
+    return events.reduce((sum, event) => sum + event.beats, 0);
+}
+
+return exports; })();
+__m['wav'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WAV_HEADER_BYTES = void 0;
+exports.encodeWav = encodeWav;
+exports.durationSeconds = durationSeconds;
+exports.WAV_HEADER_BYTES = 44;
+const FULL_SCALE = 32767;
+function encodeWav(samples, options) {
+    const { sampleRate } = options;
+    if (!Number.isInteger(sampleRate) || sampleRate <= 0) {
+        throw new Error(`sampleRate must be a positive integer, got ${sampleRate}`);
+    }
+    const channels = 1;
+    const bytesPerSample = 2;
+    const dataBytes = samples.length * bytesPerSample;
+    const buffer = new ArrayBuffer(exports.WAV_HEADER_BYTES + dataBytes);
+    const view = new DataView(buffer);
+    writeAscii(view, 0, 'RIFF');
+    view.setUint32(4, exports.WAV_HEADER_BYTES - 8 + dataBytes, true);
+    writeAscii(view, 8, 'WAVE');
+    writeAscii(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, channels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * channels * bytesPerSample, true);
+    view.setUint16(32, channels * bytesPerSample, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    writeAscii(view, 36, 'data');
+    view.setUint32(40, dataBytes, true);
+    for (let i = 0; i < samples.length; i += 1) {
+        view.setInt16(exports.WAV_HEADER_BYTES + i * bytesPerSample, toPcm16(samples[i]), true);
+    }
+    return new Uint8Array(buffer);
+}
+function durationSeconds(sampleCount, sampleRate) {
+    if (!(sampleRate > 0))
+        return 0;
+    return sampleCount / sampleRate;
+}
+function toPcm16(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    const clipped = value > 1 ? 1 : value < -1 ? -1 : value;
+    return Math.round(clipped * FULL_SCALE);
+}
+function writeAscii(view, offset, text) {
+    for (let i = 0; i < text.length; i += 1) {
+        view.setUint8(offset + i, text.charCodeAt(i));
+    }
+}
+
+return exports; })();
+__m['randomNotes'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SHUDDHA_SWARAS = exports.DEFAULT_STEP_WEIGHTS = void 0;
+exports.randomPhrase = randomPhrase;
+exports.soundedNotes = soundedNotes;
+exports.phraseToSargam = phraseToSargam;
+exports.largestStep = largestStep;
+exports.stepHistogram = stepHistogram;
+const swara_1 = require("./swara");
+exports.DEFAULT_STEP_WEIGHTS = [0, 36, 36, 25, 3];
+exports.SHUDDHA_SWARAS = [0, 2, 4, 5, 7, 9, 11];
+function maxStepFrom(weights) {
+    let largest = 0;
+    for (let size = 0; size < weights.length; size += 1) {
+        if (weights[size] > 0)
+            largest = size;
+    }
+    return largest;
+}
+function comfortableStepFrom(weights) {
+    let total = 0;
+    for (const weight of weights)
+        total += weight;
+    if (total <= 0)
+        return maxStepFrom(weights);
+    let largest = 0;
+    for (let size = 1; size < weights.length; size += 1) {
+        if (weights[size] / total >= 0.1)
+            largest = size;
+    }
+    return largest > 0 ? largest : maxStepFrom(weights);
+}
+function reachable(distance, steps, maxStep) {
+    if (steps <= 0)
+        return distance === 0;
+    if (distance > steps * maxStep)
+        return false;
+    if (steps === 1)
+        return distance >= 1 && distance <= maxStep;
+    return true;
+}
+function randomPhrase(options) {
+    const random = options.random ?? Math.random;
+    const count = Math.max(0, Math.floor(options.count));
+    if (count === 0)
+        return [];
+    const weights = options.stepWeights ?? exports.DEFAULT_STEP_WEIGHTS;
+    const maxStep = maxStepFrom(weights);
+    const comfortable = comfortableStepFrom(weights);
+    const lowest = Math.ceil(Math.min(options.lowest, options.highest));
+    const highest = Math.floor(Math.max(options.lowest, options.highest));
+    if (highest < lowest || maxStep === 0) {
+        const still = Math.min(highest, Math.max(lowest, 0));
+        const value = Number.isFinite(still) ? still : 0;
+        return new Array(count).fill(null).map(() => ({ kind: 'note', semitones: value }));
+    }
+    const period = Math.max(0, Math.floor(options.anchorEvery ?? 0));
+    const half = period >= 2 && (options.midpointAnchor ?? true) ? Math.floor(period / 2) : 0;
+    const classes = new Set((options.allowedPitchClasses ?? []).map((c) => ((c % 12) + 12) % 12));
+    const restricted = classes.size > 0;
+    const isAllowed = (note) => !restricted || classes.has(((note % 12) + 12) % 12);
+    const snap = (note) => {
+        if (isAllowed(note))
+            return note;
+        for (let distance = 1; distance <= 12; distance += 1) {
+            if (note - distance >= lowest && isAllowed(note - distance))
+                return note - distance;
+            if (note + distance <= highest && isAllowed(note + distance))
+                return note + distance;
+        }
+        return note;
+    };
+    const anchor = snap(clamp(options.anchorNote ?? Math.round(lowest / 2 + random() * (highest / 2 - lowest / 2)), lowest, highest));
+    const reachCache = new Map();
+    const layersTo = (target, limit) => {
+        const key = `${target}:${limit}`;
+        const cached = reachCache.get(key);
+        if (cached)
+            return cached;
+        const layers = [new Set([target])];
+        const depth = Math.max(2, period + 1);
+        for (let step = 1; step <= depth; step += 1) {
+            const next = new Set();
+            for (const note of layers[step - 1]) {
+                for (let size = 1; size <= limit; size += 1) {
+                    for (const direction of [-1, 1]) {
+                        const from = note + direction * size;
+                        if (from < lowest || from > highest || !isAllowed(from))
+                            continue;
+                        next.add(from);
+                    }
+                }
+            }
+            layers.push(next);
+        }
+        reachCache.set(key, layers);
+        return layers;
+    };
+    const canReach = (from, target, steps, limit) => {
+        if (!restricted)
+            return reachable(Math.abs(target - from), steps, limit);
+        if (steps <= 0)
+            return from === target;
+        const layers = layersTo(target, limit);
+        return steps < layers.length ? layers[steps].has(from) : false;
+    };
+    const drawStep = () => {
+        let total = 0;
+        for (let size = 1; size <= maxStep; size += 1)
+            total += weights[size] ?? 0;
+        if (total <= 0)
+            return 1;
+        let pick = random() * total;
+        for (let size = 1; size <= maxStep; size += 1) {
+            pick -= weights[size] ?? 0;
+            if (pick < 0)
+                return size;
+        }
+        return maxStep;
+    };
+    const isRequiredBeat = (index) => {
+        if (period <= 0)
+            return index === 0;
+        const phase = index % period;
+        return phase === 0 || (half > 0 && phase === half);
+    };
+    const hold = clamp01(options.holdChance ?? 0.2);
+    const rest = clamp01(options.restChance ?? 0.09);
+    const kinds = [];
+    for (let i = 0; i < count; i += 1) {
+        if (i === 0 || isRequiredBeat(i)) {
+            kinds.push('note');
+            continue;
+        }
+        if (kinds[i - 1] === 'rest') {
+            kinds.push('note');
+            continue;
+        }
+        const roll = random();
+        kinds.push(roll < hold ? 'hold' : roll < hold + rest ? 'rest' : 'note');
+    }
+    for (let start = 1; start < count; start += 1) {
+        if (kinds[start] !== 'note' || !isRequiredBeat(start))
+            continue;
+    }
+    enforceMinimumSounding(kinds, isRequiredBeat, random);
+    const soundingAt = [];
+    for (let i = 0; i < count; i += 1)
+        if (kinds[i] === 'note')
+            soundingAt.push(i);
+    let shortestGap = Infinity;
+    let previousRequired = -1;
+    for (const index of soundingAt) {
+        if (!isRequiredBeat(index))
+            continue;
+        if (previousRequired >= 0) {
+            const between = soundingAt.filter((i) => i > previousRequired && i <= index).length;
+            shortestGap = Math.min(shortestGap, between);
+        }
+        previousRequired = index;
+    }
+    if (!Number.isFinite(shortestGap))
+        shortestGap = 2;
+    let midpoint = null;
+    if (half > 0) {
+        for (let attempt = 0; attempt < 8 && midpoint === null; attempt += 1) {
+            let value = anchor;
+            for (let step = 0; step < Math.max(1, shortestGap); step += 1) {
+                const wanted = drawStep();
+                const order = [wanted];
+                for (let size = 1; size <= maxStep; size += 1)
+                    if (size !== wanted)
+                        order.push(size);
+                let moved = false;
+                for (const size of order) {
+                    for (const direction of random() < 0.5 ? [-1, 1] : [1, -1]) {
+                        const to = value + direction * size;
+                        if (to < lowest || to > highest || !isAllowed(to))
+                            continue;
+                        value = to;
+                        moved = true;
+                        break;
+                    }
+                    if (moved)
+                        break;
+                }
+            }
+            if (value !== anchor && value >= lowest && value <= highest)
+                midpoint = value;
+        }
+        if (midpoint === null) {
+            for (let distance = 1; distance <= 12 && midpoint === null; distance += 1) {
+                for (const direction of [1, -1]) {
+                    const candidate = anchor + direction * distance;
+                    if (candidate < lowest || candidate > highest)
+                        continue;
+                    if (!isAllowed(candidate))
+                        continue;
+                    midpoint = candidate;
+                    break;
+                }
+            }
+        }
+    }
+    const requiredAt = (index) => {
+        if (period <= 0)
+            return index === 0 ? anchor : null;
+        const phase = index % period;
+        if (phase === 0)
+            return anchor;
+        if (half > 0 && phase === half && midpoint !== null)
+            return midpoint;
+        return null;
+    };
+    const values = new Map();
+    let current = anchor;
+    values.set(soundingAt[0], anchor);
+    for (let n = 1; n < soundingAt.length; n += 1) {
+        const index = soundingAt[n];
+        const required = requiredAt(index);
+        let target = null;
+        if (required === null) {
+            for (let m = n + 1; m < soundingAt.length; m += 1) {
+                const value = requiredAt(soundingAt[m]);
+                if (value !== null) {
+                    target = { steps: m - n, value };
+                    break;
+                }
+            }
+        }
+        const candidates = [];
+        for (let size = 1; size <= maxStep; size += 1) {
+            const weight = weights[size] ?? 0;
+            if (weight <= 0)
+                continue;
+            for (const direction of [-1, 1]) {
+                const to = current + direction * size;
+                if (to < lowest || to > highest || !isAllowed(to))
+                    continue;
+                if (required !== null) {
+                    if (to === required)
+                        candidates.push({ to, weight, need: 1 });
+                    continue;
+                }
+                if (target) {
+                    if (!canReach(to, target.value, target.steps, maxStep))
+                        continue;
+                    let need = maxStep;
+                    for (let size2 = 1; size2 <= maxStep; size2 += 1) {
+                        if (canReach(to, target.value, target.steps, size2)) {
+                            need = size2;
+                            break;
+                        }
+                    }
+                    candidates.push({ to, weight, need });
+                    continue;
+                }
+                candidates.push({ to, weight, need: 1 });
+            }
+        }
+        if (candidates.length === 0) {
+            current = required !== null ? required : current;
+            values.set(index, current);
+            continue;
+        }
+        let usable = candidates.filter((candidate) => candidate.need <= 2);
+        if (usable.length === 0)
+            usable = candidates.filter((candidate) => candidate.need <= comfortable);
+        if (usable.length === 0)
+            usable = candidates;
+        let total = 0;
+        for (const candidate of usable)
+            total += candidate.weight;
+        let pick = random() * total;
+        let chosen = usable[usable.length - 1].to;
+        for (const candidate of usable) {
+            pick -= candidate.weight;
+            if (pick < 0) {
+                chosen = candidate.to;
+                break;
+            }
+        }
+        current = chosen;
+        values.set(index, current);
+    }
+    const tokens = kinds.map((kind, index) => kind === 'note' ? { kind: 'note', semitones: values.get(index) ?? anchor } : { kind });
+    return applyLoopBacks(tokens, {
+        loops: Math.max(0, Math.floor(options.loopBacks ?? 2)),
+        block: half > 0 ? half : period,
+        random,
+    });
+}
+function applyLoopBacks(tokens, options) {
+    const { loops, block, random } = options;
+    if (loops <= 0 || block <= 0)
+        return tokens;
+    const blocks = Math.floor(tokens.length / block);
+    if (blocks < 3)
+        return tokens;
+    const out = tokens.slice();
+    const used = new Set();
+    for (let attempt = 0; attempt < loops * 6 && used.size < loops; attempt += 1) {
+        const destination = 2 + Math.floor(random() * (blocks - 2));
+        if (used.has(destination))
+            continue;
+        const sources = [];
+        for (let source = 0; source < destination; source += 1) {
+            if (source % 2 === destination % 2)
+                sources.push(source);
+        }
+        if (sources.length === 0)
+            continue;
+        const source = sources[Math.min(sources.length - 1, Math.floor(random() * sources.length))];
+        for (let offset = 0; offset < block; offset += 1) {
+            const from = source * block + offset;
+            const to = destination * block + offset;
+            if (to < out.length && from < out.length)
+                out[to] = tokens[from];
+        }
+        used.add(destination);
+    }
+    return out;
+}
+function enforceMinimumSounding(kinds, isRequiredBeat, random) {
+    let runStart = -1;
+    for (let i = 1; i <= kinds.length; i += 1) {
+        const ends = i === kinds.length || isRequiredBeat(i);
+        if (!ends) {
+            if (runStart < 0)
+                runStart = i;
+            continue;
+        }
+        if (runStart >= 0) {
+            const run = [];
+            for (let j = runStart; j < i; j += 1)
+                run.push(j);
+            const sounding = run.filter((j) => kinds[j] === 'note').length;
+            if (sounding === 0 && run.length > 0) {
+                kinds[run[Math.min(run.length - 1, Math.floor(random() * run.length))]] = 'note';
+            }
+            runStart = -1;
+        }
+    }
+}
+function clamp(value, low, high) {
+    if (!Number.isFinite(value))
+        return low;
+    return Math.min(high, Math.max(low, Math.round(value)));
+}
+function clamp01(value) {
+    if (!Number.isFinite(value))
+        return 0;
+    return Math.min(1, Math.max(0, value));
+}
+function soundedNotes(tokens) {
+    const notes = [];
+    for (const token of tokens)
+        if (token.kind === 'note')
+            notes.push(token.semitones);
+    return notes;
+}
+function phraseToSargam(tokens) {
+    return tokens
+        .map((token) => token.kind === 'note' ? (0, swara_1.toSargam)(token.semitones) : token.kind === 'hold' ? '-' : '_')
+        .join(' ');
+}
+function largestStep(notes) {
+    let worst = 0;
+    for (let i = 1; i < notes.length; i += 1) {
+        worst = Math.max(worst, Math.abs(notes[i] - notes[i - 1]));
+    }
+    return worst;
+}
+function stepHistogram(notes) {
+    const counts = [];
+    for (let i = 1; i < notes.length; i += 1) {
+        const size = Math.abs(notes[i] - notes[i - 1]);
+        counts[size] = (counts[size] ?? 0) + 1;
+    }
+    for (let i = 0; i < counts.length; i += 1)
+        counts[i] = counts[i] ?? 0;
+    return counts;
+}
+
+return exports; })();
+__m['schedule'] = (function () { var exports = {}; var require = __req;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.schedulePhrase = schedulePhrase;
+exports.scheduleBeats = scheduleBeats;
+exports.overlappingPairs = overlappingPairs;
+function schedulePhrase(events, options) {
+    const beat = Number.isFinite(options.beatSeconds) && options.beatSeconds > 0
+        ? options.beatSeconds
+        : 0.5;
+    const overlap = clamp(options.overlap ?? 0, 0, 4);
+    const articulation = Math.max(0, options.articulation ?? 0);
+    const scheduled = [];
+    let cursor = 0;
+    events.forEach((event, index) => {
+        const length = Math.max(0, event.beats) * beat;
+        if (event.kind === 'note') {
+            const extra = overlap > 0 ? overlap * beat : -Math.min(articulation, length * 0.5);
+            scheduled.push({
+                at: cursor,
+                seconds: Math.max(0.03, length + extra),
+                index,
+                semitones: event.swara.semitone + event.octave * 12,
+            });
+        }
+        cursor += length;
+    });
+    return scheduled;
+}
+function scheduleBeats(events) {
+    return events.reduce((sum, event) => sum + Math.max(0, event.beats), 0);
+}
+function overlappingPairs(scheduled) {
+    let pairs = 0;
+    for (let i = 1; i < scheduled.length; i += 1) {
+        const previous = scheduled[i - 1];
+        if (previous.at + previous.seconds > scheduled[i].at + 1e-9)
+            pairs += 1;
+    }
+    return pairs;
+}
+function clamp(value, low, high) {
+    if (!Number.isFinite(value))
+        return low;
+    return Math.min(high, Math.max(low, value));
+}
+
+return exports; })();
+var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
 </script>
 
 <script>
