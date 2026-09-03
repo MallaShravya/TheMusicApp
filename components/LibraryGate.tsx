@@ -17,7 +17,7 @@ export function LibraryGate({ children }: { children: React.ReactNode }) {
     return (
       <EmptyState
         icon="lock-closed-outline"
-        title="Ratio needs access to your music"
+        title="Swayve needs access to your music"
         message="Android keeps audio files behind a permission. Grant it and your library appears here — nothing leaves the device."
         actionLabel="Grant access"
         onAction={() => void requestAccess()}

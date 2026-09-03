@@ -29,7 +29,7 @@ export function clampBrightness(value: number): number {
  * thing.
  *
  * The override is scoped to this app's window: no permission is needed, it lasts only while
- * Ratio is in the foreground, and it is handed back the moment this unmounts. Since the
+ * Swayve is in the foreground, and it is handed back the moment this unmounts. Since the
  * visualiser is itself only mounted while it is being looked at, the screen returns to normal
  * as soon as you leave the fire.
  *

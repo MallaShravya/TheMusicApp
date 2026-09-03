@@ -24,8 +24,8 @@ export async function requestAudioLibraryPermission(): Promise<boolean> {
   if (await hasAudioLibraryPermission()) return true;
 
   const result = await PermissionsAndroid.request(audioPermission(), {
-    title: 'Let Ratio read your music',
-    message: 'Ratio needs access to the audio files on this device to build your library.',
+    title: 'Let Swayve read your music',
+    message: 'Swayve needs access to the audio files on this device to build your library.',
     buttonPositive: 'Allow',
     buttonNegative: 'Not now',
   });

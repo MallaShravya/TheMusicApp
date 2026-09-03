@@ -41,7 +41,7 @@ export function useSavePiece() {
           id,
           uri: piece.uri,
           title,
-          artist: 'Ratio',
+          artist: 'Swayve',
           album: GENERATED_PLAYLIST,
           // Grouped under one album so the generated pieces sit together in Albums as well.
           albumId: 'generated',

@@ -1,4 +1,4 @@
-<title>Ratio on a Pixel 6 Pro</title>
+<title>Swayve on a Pixel 6 Pro</title>
 
 <!--
   Required for the phone layout to engage when this page is served directly.
@@ -30,7 +30,7 @@
     --accent-wash: rgba(106, 69, 255, 0.09);
     --shadow: 0 24px 60px -20px rgba(27, 26, 34, 0.34);
 
-    /* Ratio's own tokens. Fixed in both themes. */
+    /* Swayve's own tokens. Fixed in both themes. */
     --app-bg: #0B0B10;
     --app-surface: #15151D;
     --app-text: #F2F2F7;
@@ -376,7 +376,7 @@
 
 <div class="shell">
   <header class="masthead">
-    <h1>Ratio on a Pixel 6 Pro</h1>
+    <h1>Swayve on a Pixel 6 Pro</h1>
     <span class="device-tag">412 × 892 dp · 1440 × 3120 @ 3.5×</span>
     <p>
       Opacities are exactly as they are on your phone. Pin a colour to hold it against the
@@ -1788,14 +1788,14 @@ function clamp(value, low, high) {
 }
 
 return exports; })();
-var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
+var SWAYVE = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
 </script>
 
 <script>
 (function () {
   'use strict';
 
-  var S = RATIO;
+  var S = SWAYVE;
   var SCENE = S.SCENE;
   var VIEWPORT = S.VIEWPORT;
   var NS = 'http://www.w3.org/2000/svg';
@@ -1832,7 +1832,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
    */
   (function installTwinkle() {
     var css = ['.tw { animation-iteration-count: infinite; animation-timing-function: ease-in-out; }'];
-    RATIO.TWINKLE_GROUPS.forEach(function (group, index) {
+    SWAYVE.TWINKLE_GROUPS.forEach(function (group, index) {
       css.push('.tw' + index + ' { animation-name: tw' + index + '; }');
       css.push(
         '@keyframes tw' + index + ' { 0%, 100% { opacity: ' + group.low + '; } 50% { opacity: 1; } }'
@@ -1861,7 +1861,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
   var running = true;
   var clock = 0;
-  var skyClock = S.SHOOTING_DURATION + 2;
+  var skyClock = S.SHOOTING_DUSWAYVEN + 2;
   var ampOverride = null;
   var brightOverride = 0.5;
   var cutAt = null;

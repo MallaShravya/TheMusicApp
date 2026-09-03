@@ -102,7 +102,7 @@ export default function SongsScreen() {
             message={
               query
                 ? `Nothing in your library matches “${query}”.`
-                : 'Ratio scans the audio files stored on this device. Copy some music over, then rescan.'
+                : 'Swayve scans the audio files stored on this device. Copy some music over, then rescan.'
             }
             actionLabel={query ? undefined : 'Rescan'}
             onAction={query ? undefined : () => void refresh()}

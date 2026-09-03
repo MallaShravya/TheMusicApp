@@ -6,5 +6,5 @@
  * is a new key plus a migration that reads the old one, not a hopeful in-place reinterpret
  * that corrupts what it cannot parse.
  */
-export const PLAYLISTS_KEY = 'ratio.playlists.v1';
-export const FAVOURITES_KEY = 'ratio.favourites.v1';
+export const PLAYLISTS_KEY = 'swayve.playlists.v1';
+export const FAVOURITES_KEY = 'swayve.favourites.v1';

@@ -70,6 +70,10 @@ function run(file) {
   const html = fs.readFileSync(file, 'utf8');
   const blocks = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 
+  // A page with no script is a still image — icons, palettes, device mockups. Nothing
+  // initialises, nothing is wired, so there is nothing here to prove.
+  if (blocks.length === 0) return null;
+
   // Only ids the page actually declares, so a lookup for something removed comes back null
   // exactly as it would in a browser.
   const ids = new Set([...html.matchAll(/id="([A-Za-z0-9_-]+)"/g)].map((m) => m[1]));
@@ -136,7 +140,13 @@ function run(file) {
   const values = names.map((n) => sandbox[n]);
 
   // The bundle first, then the page's own code, sharing one scope as in a browser.
-  const source = `${blocks[0]}\n;globalThis.RATIO = RATIO;\n${blocks.slice(1).join('\n')}`;
+  // Only a built page carries the bundle in its first block. A hand-written page's first
+  // script is its own code, and re-exporting a global it never defined would be the one
+  // thing that threw.
+  const exportsBundle = /\bvar SWAYVE\b/.test(blocks[0]);
+  const source = exportsBundle
+    ? `${blocks[0]}\n;globalThis.SWAYVE = SWAYVE;\n${blocks.slice(1).join('\n')}`
+    : blocks.join('\n');
 
   try {
     new Function(...names, source)(...values);

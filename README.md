@@ -1,4 +1,4 @@
-# Ratio
+# Swayve
 
 An offline Android music player. It reads the audio files already on your phone, plays them
 with background playback and lock-screen controls, and keeps playlists and favourites

@@ -22,12 +22,12 @@ const ROOT = path.resolve(__dirname, '..');
 /* ------------------------------------------------------------------ the flame */
 
 /** The compiled visualiser, taken from a page the builder has already made. */
-function loadRatio() {
+function loadSwayve() {
   const page = fs.readFileSync(path.join(__dirname, 'bonfire-console.html'), 'utf8');
   const bundle = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)][0][1];
   const scope = {};
-  new Function('globalThis', `${bundle}\nglobalThis.RATIO = RATIO;`)(scope);
-  return scope.RATIO;
+  new Function('globalThis', `${bundle}\nglobalThis.SWAYVE = SWAYVE;`)(scope);
+  return scope.SWAYVE;
 }
 
 /**
@@ -266,4 +266,4 @@ function writePng(surface, factor, file) {
   return png.length;
 }
 
-module.exports = { loadRatio, settle, outlinesAt, canvas, fill, polygon, log, wave, writePng, blend };
+module.exports = { loadSwayve, settle, outlinesAt, canvas, fill, polygon, log, wave, writePng, blend };

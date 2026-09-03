@@ -81,7 +81,7 @@ export default function GenerateScreen() {
           id: 'generated-preview',
           uri: `${piece.uri}?t=${Date.now()}`,
           title: 'Untitled',
-          artist: 'Ratio',
+          artist: 'Swayve',
           album: 'Generated',
           albumId: 'generated',
           artistId: 'generated',

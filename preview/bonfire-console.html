@@ -271,7 +271,7 @@
   <header>
     <h1>Bonfire Console</h1>
     <p class="lede">
-      Tuning rig for Ratio's audio visualiser. The flame maths here is the shipping code,
+      Tuning rig for Swayve's audio visualiser. The flame maths here is the shipping code,
       compiled straight out of <code style="font-family:var(--mono);font-size:13px">src/visualiser</code> —
       what you see is what the app will draw.
     </p>
@@ -1680,7 +1680,7 @@ function clamp(value, low, high) {
 }
 
 return exports; })();
-var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
+var SWAYVE = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m['features'], __m['envelope'], __m['flameShape'], __m['flameDrive'], __m['flameSettings'], __m['trackAnalysis'], __m['sparks'], __m['flameFrame'], __m['starField'], __m['swara'], __m['wav'], __m['randomNotes'], __m['schedule']);
 </script>
 
 <script>
@@ -1764,7 +1764,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
     tongueGroup.textContent = '';
     // Position, resting height, gain and surge rhythm all come from the shared module, so the
     // preview and the app lay out the same fire.
-    tongues = RATIO.makeTongues(count);
+    tongues = SWAYVE.makeTongues(count);
     // Each tongue follows loudness on its own clock, so this is per-tongue state.
     levels = tongues.map(function () { return 0; });
     paths = [];
@@ -1790,10 +1790,10 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
   }
 
   // ---- pseudo-tracks -------------------------------------------------------
-  var HOP_MS = 50, DURATION_S = 45;
+  var HOP_MS = 50, DUSWAYVEN_S = 45;
 
   function makeTrack(kind) {
-    var n = Math.round((DURATION_S * 1000) / HOP_MS);
+    var n = Math.round((DUSWAYVEN_S * 1000) / HOP_MS);
     var rms = [], centroidHz = [];
 
     for (var i = 0; i < n; i++) {
@@ -1803,25 +1803,25 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
       if (kind === 'bass') {
         var kick = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 1.75)), 8);
-        level = 0.085 * (0.4 + 0.8 * kick) * (0.9 + 0.2 * RATIO.wobble(5, t * 1.3));
-        cent = 210 + 190 * kick + 80 * RATIO.wobble(11, t * 1.1);
+        level = 0.085 * (0.4 + 0.8 * kick) * (0.9 + 0.2 * SWAYVE.wobble(5, t * 1.3));
+        cent = 210 + 190 * kick + 80 * SWAYVE.wobble(11, t * 1.1);
       } else if (kind === 'bright') {
         var hit = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 3.1)), 12);
-        level = 0.045 * (0.16 + 1.2 * hit) * (0.9 + 0.25 * RATIO.wobble(2, t * 2.2));
-        cent = 2500 + 3400 * hit + 800 * RATIO.wobble(8, t * 1.7);
+        level = 0.045 * (0.16 + 1.2 * hit) * (0.9 + 0.25 * SWAYVE.wobble(2, t * 2.2));
+        cent = 2500 + 3400 * hit + 800 * SWAYVE.wobble(8, t * 1.7);
       } else {
         // Starts near the noise floor and grows — the case that proves per-track
         // normalisation, because an absolute window would leave the first half dead.
         var beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 2)), 6);
-        level = (0.003 + 0.15 * Math.pow(prog, 1.7)) * (0.45 + 0.6 * beat) * (0.85 + 0.3 * RATIO.wobble(9, t * 0.7));
-        cent = 320 + 2500 * Math.pow(prog, 1.4) + 380 * RATIO.wobble(3, t * 0.9);
+        level = (0.003 + 0.15 * Math.pow(prog, 1.7)) * (0.45 + 0.6 * beat) * (0.85 + 0.3 * SWAYVE.wobble(9, t * 0.7));
+        cent = 320 + 2500 * Math.pow(prog, 1.4) + 380 * SWAYVE.wobble(3, t * 0.9);
       }
 
       rms.push(Math.max(0, level));
       centroidHz.push(Math.max(0, cent));
     }
 
-    return RATIO.buildTrackAnalysis({ sampleRate: 16000, hopMs: HOP_MS, rms: rms, centroidHz: centroidHz });
+    return SWAYVE.buildTrackAnalysis({ sampleRate: 16000, hopMs: HOP_MS, rms: rms, centroidHz: centroidHz });
   }
 
   var tracks = { build: makeTrack('build'), bass: makeTrack('bass'), bright: makeTrack('bright') };
@@ -1836,7 +1836,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
   // Defaults, ranges and step grids all come from src/visualiser/flameSettings.ts,
   // so the console cannot drift from the app.
-  var form = Object.assign({}, RATIO.DEFAULT_FLAME_SETTINGS);
+  var form = Object.assign({}, SWAYVE.DEFAULT_FLAME_SETTINGS);
 
   buildTongues(form.tongues, form.layers);
 
@@ -1844,7 +1844,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
   (function paintRamp() {
     var stops = [];
     for (var i = 0; i <= 10; i++) {
-      var col = RATIO.flameColour(i / 10);
+      var col = SWAYVE.flameColour(i / 10);
       stops.push('rgb(' + col.r + ',' + col.g + ',' + col.b + ') ' + (i * 10) + '%');
     }
     document.getElementById('ramp').style.background =
@@ -1866,20 +1866,20 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
     for (var x = 0; x < w; x++) {
       var idx = Math.min(n - 1, Math.floor((x / w) * n));
       var a = amp[idx];
-      var col = RATIO.flameColour(bri[idx]);
+      var col = SWAYVE.flameColour(bri[idx]);
       var barH = Math.max(1, a * (h - 6));
       tctx.fillStyle = 'rgba(' + col.r + ',' + col.g + ',' + col.b + ',0.72)';
       tctx.fillRect(x, h - barH, 1, barH);
     }
 
-    var px = (playhead / DURATION_S) * w;
+    var px = (playhead / DUSWAYVEN_S) * w;
     tctx.fillStyle = '#F2F2F7';
     tctx.fillRect(px - 1, 0, 2, h);
   }
 
   timeline.addEventListener('click', function (event) {
     var rect = timeline.getBoundingClientRect();
-    playhead = Math.max(0, Math.min(DURATION_S, ((event.clientX - rect.left) / rect.width) * DURATION_S));
+    playhead = Math.max(0, Math.min(DUSWAYVEN_S, ((event.clientX - rect.left) / rect.width) * DUSWAYVEN_S));
     drawTimeline();
   });
 
@@ -1890,7 +1890,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
     if (playing && !manual) {
       playhead += dt;
-      if (playhead >= DURATION_S) playhead = 0;
+      if (playhead >= DUSWAYVEN_S) playhead = 0;
     }
 
     var target;
@@ -1900,15 +1900,15 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
         brightness: parseFloat(document.getElementById('mBri').value)
       };
     } else {
-      target = RATIO.sampleAnalysis(analysis, playhead);
+      target = SWAYVE.sampleAnalysis(analysis, playhead);
     }
 
     // The real envelope follower: fast attack, slow release.
-    smoothAmp = RATIO.follow(smoothAmp, target.amplitude, RATIO.FLAME_RATES);
-    smoothBri = RATIO.follow(smoothBri, target.brightness, RATIO.COLOUR_RATES);
+    smoothAmp = SWAYVE.follow(smoothAmp, target.amplitude, SWAYVE.FLAME_RATES);
+    smoothBri = SWAYVE.follow(smoothBri, target.brightness, SWAYVE.COLOUR_RATES);
 
     var t = now / 1000;
-    var colour = RATIO.flameColour(smoothBri);
+    var colour = SWAYVE.flameColour(smoothBri);
     var rgb = colour.r + ',' + colour.g + ',' + colour.b;
 
     // Only used for the glow and sparks — the flames themselves are driven per tongue.
@@ -1921,9 +1921,9 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
       // Each tongue follows the *raw* loudness with its own attack and release, so a beat
       // reaches them at different moments — not the globally smoothed value, which would have
       // already flattened that timing out.
-      levels[i] = RATIO.follow(levels[i], target.amplitude, tongue);
-      var reach = RATIO.tongueEnergy(tongue, t, levels[i]);
-      var spread = RATIO.tongueSpread(reach);
+      levels[i] = SWAYVE.follow(levels[i], target.amplitude, tongue);
+      var reach = SWAYVE.tongueEnergy(tongue, t, levels[i]);
+      var spread = SWAYVE.tongueSpread(reach);
 
       for (var l = 0; l < layers.length; l++) {
         // Layer 0 is the outermost halo, the last is the hot core.
@@ -1932,9 +1932,9 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
         // form.height is a *peak* budget: dividing by the ceiling and the halo scale means the
         // tallest tongue at full loudness lands on form.height and never above it.
-        var heightUnit = form.height / (RATIO.MAX_REACH * 1.24);
+        var heightUnit = form.height / (SWAYVE.MAX_REACH * 1.24);
 
-        var d = RATIO.toPathData(RATIO.flameOutline({
+        var d = SWAYVE.toPathData(SWAYVE.flameOutline({
           seed: tongue.seed + l * 0.31,
           time: t,
           centreX: VIEW_W / 2 + tongue.offset * form.width * 1.45,
@@ -1983,7 +1983,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
       // Each spark loops on its own schedule so they do not pulse in unison.
       var life = (t * (0.22 + 0.16 * (k % 5)) + spark.offset) % 1;
       var rise = Math.pow(life, 0.85);
-      var x = VIEW_W / 2 + RATIO.wobble(spark.seed, t * 0.7 + life * 3) * form.width * 1.9;
+      var x = VIEW_W / 2 + SWAYVE.wobble(spark.seed, t * 0.7 + life * 3) * form.width * 1.9;
       var y = BASE_Y - rise * (form.height * 1.35) * energy;
       spark.el.setAttribute('cx', x.toFixed(1));
       spark.el.setAttribute('cy', y.toFixed(1));
@@ -1998,7 +1998,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
     document.getElementById('ampFill').style.width = (smoothAmp * 100).toFixed(1) + '%';
     document.getElementById('rampMark').style.left = (smoothBri * 100).toFixed(1) + '%';
     document.getElementById('clock').textContent =
-      formatTime(playhead) + ' / ' + formatTime(DURATION_S);
+      formatTime(playhead) + ' / ' + formatTime(DUSWAYVEN_S);
 
     frames++;
     fpsAccum += dt;
@@ -2076,7 +2076,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
   // One slider per declared setting, in the order the module lists them.
   var formHost = document.getElementById('formControls');
 
-  RATIO.FLAME_SETTING_RANGES.forEach(function (range) {
+  SWAYVE.FLAME_SETTING_RANGES.forEach(function (range) {
     var wrap = document.createElement('div');
     wrap.className = 'slider';
 
@@ -2101,7 +2101,7 @@ var RATIO = Object.assign({}, __m['noise'], __m['fft'], __m['flameColour'], __m[
 
     function sync() {
       // Through the same clamp the app uses, so what the console shows is reachable there.
-      var value = RATIO.clampSetting(range.key, parseFloat(input.value));
+      var value = SWAYVE.clampSetting(range.key, parseFloat(input.value));
       form[range.key] = value;
       out.textContent = value.toFixed(range.decimals);
       if (range.key === 'tongues' || range.key === 'layers') {

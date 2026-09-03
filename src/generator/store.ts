@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Track } from '@/src/model';
 
-const STORAGE_KEY = 'ratio.generatedTracks.v1';
+const STORAGE_KEY = 'swayve.generatedTracks.v1';
 
 /**
  * Tracks produced by the (upcoming) math-based generator.

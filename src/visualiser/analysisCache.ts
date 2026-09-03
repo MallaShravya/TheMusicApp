@@ -11,8 +11,8 @@ import type { TrackAnalysis } from './trackAnalysis';
  * mean parsing every cached analysis on the first read — hundreds of kilobytes of JSON to
  * answer a question about one track.
  */
-const INDEX_KEY = 'ratio.analysis.index.v1';
-const ENTRY_PREFIX = 'ratio.analysis.v1.';
+const INDEX_KEY = 'swayve.analysis.index.v1';
+const ENTRY_PREFIX = 'swayve.analysis.v1.';
 
 /**
  * How many tracks to keep. Each is roughly 20–40 KB, so this is a few hundred kilobytes —

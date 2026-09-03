@@ -12,7 +12,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { loadRatio, settle, outlinesAt, canvas, fill, polygon, log, wave, writePng } = require('./makeIcon');
+const { loadSwayve, settle, outlinesAt, canvas, fill, polygon, log, wave, writePng } = require('./makeIcon');
 
 const OUT = path.join(__dirname, 'icons');
 
@@ -204,7 +204,7 @@ const SHAPES = [
 }));
 
 function main() {
-  const R = loadRatio();
+  const R = loadSwayve();
   const made = [];
 
   for (const shape of SHAPES) {

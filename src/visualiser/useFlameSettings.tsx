@@ -18,8 +18,8 @@ import {
 } from './flameSettings';
 import { clampBrightness, SYSTEM_BRIGHTNESS } from './useScreenBrightness';
 
-const STORAGE_KEY = 'ratio.flameSettings.v1';
-const BRIGHTNESS_KEY = 'ratio.flameBrightness.v1';
+const STORAGE_KEY = 'swayve.flameSettings.v1';
+const BRIGHTNESS_KEY = 'swayve.flameBrightness.v1';
 
 export type FlameSettingsState = {
   settings: FlameSettings;

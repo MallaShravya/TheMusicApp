@@ -4,7 +4,7 @@
  *   node preview/build.js
  *
  * Compiles the visualiser modules out of `src/visualiser`, wraps them in a tiny module
- * registry, drops them into the template at `__RATIO_BUNDLE__`, and refuses to write the
+ * registry, drops them into the template at `__SWAYVE_BUNDLE__`, and refuses to write the
  * page unless both script blocks actually parse.
  *
  * This exists because the preview was twice corrupted by editing the built page in place:
@@ -21,7 +21,7 @@ const path = require('node:path');
 const os = require('node:os');
 
 const ROOT = path.resolve(__dirname, '..');
-const PLACEHOLDER = '/*__RATIO_BUNDLE__*/';
+const PLACEHOLDER = '/*__SWAYVE_BUNDLE__*/';
 
 /**
  * The pages built from `src/visualiser`. `blocks` is how many `<script>` blocks the page is
@@ -143,7 +143,7 @@ function assemble(outDir, extra = []) {
     );
   }
 
-  parts.push(`var RATIO = Object.assign({}, ${all.map(({ name }) => `__m['${name}']`).join(', ')});`);
+  parts.push(`var SWAYVE = Object.assign({}, ${all.map(({ name }) => `__m['${name}']`).join(', ')});`);
   return parts.join('\n');
 }
 
