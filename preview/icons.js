@@ -22,6 +22,14 @@ const SUPERSAMPLE = 3;
 const BLACK = [0, 0, 0];
 const WAVE = [0x00, 0x73, 0xfa];
 
+const hex = (rgb) => `#${rgb.map((n) => n.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+
+/** The app's primary accent, read rather than repeated, so the caption cannot go stale. */
+function accentColour() {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'theme', 'colors.ts'), 'utf8');
+  return source.match(/^\s{2}accent:\s*'([^']+)'/m)[1].toUpperCase();
+}
+
 /** A hint of wood: the two widest pieces only, and dark enough to read as shadow. */
 const LOGS = [
   { x: -58, y: -2, w: 116, h: 8, rotate: -8, fill: [0x2c, 0x1c, 0x0e] },
@@ -220,6 +228,9 @@ function main() {
 }
 
 function writePage(made) {
+  const accent = accentColour();
+  const wave = hex(WAVE);
+
   const tiles = made
     .map(
       (variant) => `
@@ -270,12 +281,12 @@ function writePage(made) {
   <header>
     <h1>Swayve</h1>
     <p>
-      The narrow base, no wood, zoomed and lifted by varying amounts. Four tongues, wave
-      centred and behind the flames.
+      The narrow base, no wood, zoomed and lifted by varying amounts. Four tongues, and a wave
+      behind them running off both edges.
     </p>
     <p>
-      <span class="swatch" style="background:#FFA000"></span>accent #FFA000
-      &nbsp;&nbsp;<span class="swatch" style="background:#005FFF"></span>wave #005FFF
+      <span class="swatch" style="background:${accent}"></span>accent ${accent}
+      &nbsp;&nbsp;<span class="swatch" style="background:${wave}"></span>wave ${wave}
       &nbsp;&nbsp;<span class="swatch" style="background:#000; outline:1px solid #2a2a34"></span>black ground
     </p>
   </header>
